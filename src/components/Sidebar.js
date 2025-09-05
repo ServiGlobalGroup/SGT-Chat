@@ -4,16 +4,14 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import {
   MessageCircle,
   Users,
-  Phone,
   Calendar,
   Files,
   Settings,
   Bell,
-  LogOut,
-  Hash
+  LogOut
 } from 'lucide-react';
 
-function Sidebar({ activeSection, onSectionChange }) {
+function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const navigationItems = [
@@ -22,19 +20,13 @@ function Sidebar({ activeSection, onSectionChange }) {
       icon: MessageCircle, 
       label: 'Conversaciones', 
       description: 'Tus mensajes y chats activos',
-      badge: 3 
+      badge: totalUnread > 0 ? totalUnread : null
     },
     { 
       id: 'contacts', 
       icon: Users, 
       label: 'Contactos', 
       description: 'Gestionar tu lista de contactos'
-    },
-    { 
-      id: 'calls', 
-      icon: Phone, 
-      label: 'Llamadas', 
-      description: 'Historial y llamadas recientes'
     },
     { 
       id: 'calendar', 
@@ -47,12 +39,6 @@ function Sidebar({ activeSection, onSectionChange }) {
       icon: Files, 
       label: 'Archivos', 
       description: 'Documentos y archivos compartidos'
-    },
-    { 
-      id: 'channels', 
-      icon: Hash, 
-      label: 'Canales', 
-      description: 'Salas de chat grupales'
     }
   ];
 

@@ -14,7 +14,8 @@ function App() {
       status: 'online',
       lastMessage: 'Hola, ¿cómo estás?',
       timestamp: '10:30',
-      unreadCount: 2
+  unreadCount: 2,
+  pinned: true
     },
     {
       id: 2,
@@ -23,7 +24,8 @@ function App() {
       status: 'away',
       lastMessage: 'Perfecto, nos vemos mañana',
       timestamp: '09:15',
-      unreadCount: 0
+  unreadCount: 0,
+  pinned: false
     },
     {
       id: 3,
@@ -32,7 +34,8 @@ function App() {
       status: 'offline',
       lastMessage: 'Gracias por la información',
       timestamp: 'Ayer',
-      unreadCount: 1
+  unreadCount: 1,
+  pinned: false
     },
     {
       id: 4,
@@ -41,7 +44,8 @@ function App() {
       status: 'busy',
       lastMessage: 'Estoy en reunión, te escribo luego',
       timestamp: '08:45',
-      unreadCount: 0
+  unreadCount: 0,
+  pinned: false
     },
     {
       id: 5,
@@ -50,7 +54,8 @@ function App() {
       status: 'online',
       lastMessage: '¿Podemos revisar el proyecto?',
       timestamp: '07:30',
-      unreadCount: 3
+  unreadCount: 3,
+  pinned: false
     }
   ]);
 
@@ -61,6 +66,8 @@ function App() {
 
   const handleSelectContact = (id) => {
     setSelectedContactId(id);
+    // Marcar como leído: eliminar burbuja de notificación
+    setContacts(prev => prev.map(c => c.id === id ? { ...c, unreadCount: 0 } : c));
     // Inicializar array si no existe
     setMessagesByContact(prev => prev[id] ? prev : { ...prev, [id]: sampleMessages(id) });
   };
@@ -73,6 +80,22 @@ function App() {
         { id: Date.now(), text, own: true, timestamp: Date.now() }
       ]
     }));
+    // Actualizar preview en la lista (último mensaje y hora)
+    setContacts(prev => prev.map(c => c.id === contactId ? {
+      ...c,
+      lastMessage: text,
+      timestamp: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),
+    } : c));
+  };
+
+  const togglePinContact = (contactId) => {
+    setContacts(prev => {
+      const updated = prev.map(c => c.id === contactId ? { ...c, pinned: !c.pinned } : c);
+      // Orden estable: separar pinned y no pinned respetando orden original
+      const pinned = updated.filter(c => c.pinned);
+      const unpinned = updated.filter(c => !c.pinned);
+      return [...pinned, ...unpinned];
+    });
   };
 
   // Mensajes de ejemplo iniciales
@@ -100,16 +123,23 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const totalUnread = contacts.reduce((acc,c) => acc + (c.unreadCount || 0), 0);
+
+  // Orden derivada (ya mantenemos estable en togglePin, pero aseguramos en render)
+  const orderedContacts = [...contacts].sort((a,b) => (a.pinned === b.pinned) ? 0 : (a.pinned ? -1 : 1));
+
   return (
     <div className="app">
       <Sidebar 
         activeSection={activeSection}
         onSectionChange={setActiveSection}
+        totalUnread={totalUnread}
       />
       <ContactList 
-        contacts={contacts}
+        contacts={orderedContacts}
         selectedContactId={selectedContactId}
         onSelectContact={handleSelectContact}
+  onTogglePin={togglePinContact}
       />
       <ChatView 
         contact={selectedContact}

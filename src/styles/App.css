@@ -329,6 +329,16 @@
   transform: translateX(4px);
 }
 
+.contact-item .pin-btn.active {
+  /* Asegura visibilidad aun si no seleccionado */
+  background: rgba(99,102,241,0.15);
+}
+
+.contact-item.pinned:not(.selected) {
+  border-left-color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%);
+}
+
 .contact-item.selected::before {
   opacity: 0;
 }
@@ -377,6 +387,34 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.pin-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.pin-btn:hover {
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+}
+
+.pin-btn.active {
+  color: var(--color-primary);
+  background: rgba(99,102,241,0.12);
+  box-shadow: 0 2px 6px rgba(99,102,241,0.25);
+}
+
+.pin-btn.active:hover {
+  background: rgba(99,102,241,0.18);
 }
 
 .contact-name {

@@ -1,9 +1,9 @@
 import React from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
-import { Search } from 'lucide-react';
+import { Search, Pin } from 'lucide-react';
 import '../styles/avatars.css';
 
-function ContactList({ contacts, selectedContactId, onSelectContact }) {
+function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin }) {
   // Función para generar color único basado en el nombre
   const generateAvatarColor = (name) => {
     const colors = [
@@ -61,8 +61,12 @@ function ContactList({ contacts, selectedContactId, onSelectContact }) {
               return (
                 <div
                   key={contact.id}
-                  className={`contact-item ${selectedContactId === contact.id ? 'selected' : ''}`}
-                  onClick={() => onSelectContact && onSelectContact(contact.id)}
+                  className={`contact-item ${selectedContactId === contact.id ? 'selected' : ''} ${contact.pinned ? 'pinned' : ''}`}
+                  onClick={(e) => {
+                    // Evitar que click en pin seleccione contacto
+                    if (e.target.closest('.pin-btn')) return;
+                    onSelectContact && onSelectContact(contact.id);
+                  }}
                 >
                   <div 
                     className="avatar-round"
@@ -79,6 +83,14 @@ function ContactList({ contacts, selectedContactId, onSelectContact }) {
                       {contact.unreadCount > 0 && (
                         <span className="contact-unread-badge">{contact.unreadCount}</span>
                       )}
+                      <button 
+                        type="button"
+                        className={`pin-btn ${contact.pinned ? 'active' : ''}`}
+                        title={contact.pinned ? 'Desfijar' : 'Fijar chat'}
+                        onClick={() => onTogglePin && onTogglePin(contact.id)}
+                      >
+                        <Pin size={14} />
+                      </button>
                     </div>
                   </div>
                   <p className="contact-last-message">{contact.lastMessage}</p>
