@@ -1,11 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 // Utilidades de fecha
 const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
 const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, 1);
-const formatKey = (d) => d.toISOString().slice(0,10); // YYYY-MM-DD
+// Formato local YYYY-MM-DD evitando desplazamiento por zona horaria
+const pad = n => String(n).padStart(2,'0');
+const formatKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const isToday = (d) => {
   const t = new Date();
   return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
@@ -43,7 +47,9 @@ function CalendarPage() {
   const [reminders, setReminders] = useState({}); // key => [{id,text,time}]
   const [open, setOpen] = useState(false);
   const [formDate, setFormDate] = useState(formatKey(new Date()));
+  const [pickerMonth, setPickerMonth] = useState(startOfMonth(new Date()));
   const [formText, setFormText] = useState('');
+  const [pendingDelete, setPendingDelete] = useState(null); // {dateKey,id,text}
 
   const matrix = useMemo(() => buildMonthMatrix(month), [month]);
   const monthName = month.toLocaleDateString('es-ES', { month:'long' });
@@ -72,11 +78,24 @@ function CalendarPage() {
   const openAddForDay = (date) => {
     setFormDate(formatKey(date));
     setFormText('');
+    setPickerMonth(startOfMonth(date));
     setOpen(true);
   };
 
+  // Sincroniza el mes del selector cuando se abre manualmente
+  useEffect(()=>{
+    if (open) {
+      const d = new Date(formDate);
+      if (!isNaN(d)) setPickerMonth(startOfMonth(d));
+    }
+  },[open, formDate]);
+
+  const pickerMatrix = useMemo(()=> buildMonthMatrix(pickerMonth),[pickerMonth]);
+  const pickerMonthLabel = pickerMonth.toLocaleDateString('es-ES', { month:'long', year:'numeric' });
+
   return (
-    <div className="page-container fade-in calendar-page">
+  <Tooltip.Provider delayDuration={300} skipDelayDuration={100}>
+  <div className="page-container fade-in calendar-page">
       <header className="page-header calendar-header">
         <div className="cal-left">
           <button className="cal-nav-btn" onClick={() => setMonth(m => addMonths(m,-1))} aria-label="Mes anterior"><ChevronLeft size={18} /></button>
@@ -102,13 +121,43 @@ function CalendarPage() {
                   </Dialog.Close>
                 </div>
                 <div className="dialog-body">
-                  <label className="form-field">
+                  <div className="form-field">
                     <span>Fecha</span>
-                    <input type="date" value={formDate} onChange={e=>setFormDate(e.target.value)} />
-                  </label>
+                    <div className="mini-date-picker" role="group" aria-label="Selector de fecha">
+                      <div className="mdp-header">
+                        <button type="button" className="mdp-nav" onClick={()=>setPickerMonth(m=>addMonths(m,-1))} aria-label="Mes anterior">‹</button>
+                        <span className="mdp-title">{pickerMonthLabel.charAt(0).toUpperCase()+pickerMonthLabel.slice(1)}</span>
+                        <button type="button" className="mdp-nav" onClick={()=>setPickerMonth(m=>addMonths(m,1))} aria-label="Mes siguiente">›</button>
+                      </div>
+                      <div className="mdp-weekdays" aria-hidden="true">
+                        {['L','M','X','J','V','S','D'].map(d=> <div key={d}>{d}</div>)}
+                      </div>
+                      <div className="mdp-grid">
+                        {pickerMatrix.map((week, wi)=>(
+                          <div key={wi} className="mdp-week">
+                            {week.map(cell=>{
+                              const key = formatKey(cell.date);
+                              const selected = key === formDate;
+                              return (
+                                <button
+                                  key={key}
+                                  type="button"
+                                  className={`mdp-day ${cell.outside?'outside':''} ${selected?'selected':''} ${isToday(cell.date)?'today':''}`}
+                                  onClick={()=>{ if(!cell.outside){ setFormDate(key); } }}
+                                  aria-pressed={selected}
+                                  tabIndex={cell.outside?-1:0}
+                                >{cell.date.getDate()}</button>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                   <label className="form-field">
                     <span>Descripción</span>
                     <textarea rows={3} maxLength={200} value={formText} onChange={e=>setFormText(e.target.value)} placeholder="Ej: Llamar a cliente" />
+                    <div className="char-counter">{formText.length}/200</div>
                   </label>
                 </div>
                 <div className="dialog-footer">
@@ -140,10 +189,21 @@ function CalendarPage() {
                     <div className="calendar-day-number" onClick={() => !cell.outside && openAddForDay(cell.date)}>{cell.date.getDate()}</div>
                     <div className="calendar-reminders">
                       {dayRem.slice(0,3).map(r => (
-                        <div key={r.id} className="reminder-pill" title={r.text}>
-                          <span className="reminder-text">{r.text}</span>
-                          <button className="reminder-del" onClick={(e)=>{e.stopPropagation(); deleteReminder(key,r.id);}} aria-label="Eliminar">×</button>
-                        </div>
+                        <Tooltip.Root key={r.id}>
+                          <Tooltip.Trigger asChild>
+                            <div className="reminder-pill">
+                              <span className="reminder-text">{r.text}</span>
+                              <button className="reminder-del" onClick={(e)=>{e.stopPropagation(); setPendingDelete({ dateKey:key, id:r.id, text:r.text });}} aria-label="Eliminar">×</button>
+                            </div>
+                          </Tooltip.Trigger>
+                          <Tooltip.Portal>
+                            <Tooltip.Content className="tooltip-content" side="top" sideOffset={8} align="center">
+                              <div className="tooltip-header"><strong>Recordatorio</strong></div>
+                              <div className="tooltip-description">{r.text}</div>
+                              <Tooltip.Arrow className="tooltip-arrow" />
+                            </Tooltip.Content>
+                          </Tooltip.Portal>
+                        </Tooltip.Root>
                       ))}
                       {dayRem.length > 3 && <div className="reminder-more" title={dayRem.map(r=>r.text).join('\n')}>+{dayRem.length-3}</div>}
                     </div>
@@ -155,7 +215,33 @@ function CalendarPage() {
         </div>
   { /* Texto de ayuda eliminado a petición del usuario */ }
       </div>
-    </div>
+  <AlertDialog.Root open={!!pendingDelete} onOpenChange={(v)=>{ if(!v) setPendingDelete(null); }}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="alert-overlay" />
+          <AlertDialog.Content className="alert-content" aria-label="Confirmar eliminación de recordatorio">
+            <div className="alert-header">
+              <AlertDialog.Title className="alert-title">Eliminar recordatorio</AlertDialog.Title>
+              <AlertDialog.Cancel asChild>
+                <button className="alert-close" aria-label="Cerrar"><X size={14}/></button>
+              </AlertDialog.Cancel>
+            </div>
+            <div className="alert-body">
+              <p className="alert-text">¿Seguro que deseas eliminar este recordatorio?</p>
+              {pendingDelete && <p className="alert-quote">“{pendingDelete.text.slice(0,120)}{pendingDelete.text.length>120?'…':''}”</p>}
+            </div>
+            <div className="alert-footer">
+              <AlertDialog.Cancel asChild>
+                <button className="btn-secondary btn-sm">Cancelar</button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <button className="btn-danger btn-sm" onClick={()=>{ if(pendingDelete){ deleteReminder(pendingDelete.dateKey, pendingDelete.id); setPendingDelete(null);} }}>Eliminar</button>
+              </AlertDialog.Action>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
+  </div>
+  </Tooltip.Provider>
   );
 }
 
