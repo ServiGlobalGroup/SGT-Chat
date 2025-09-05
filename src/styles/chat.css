@@ -310,33 +310,45 @@
 
 /* Botón + inline (sin contenedor voluminoso) */
 .chat-plus-inline {
-  position:absolute; left:14px; top:50%; transform:translateY(calc(-50% - 2px)); /* subido ligeramente */
+  position:absolute; left:14px; bottom:10px; top:auto; /* posición fija al fondo */
   background:transparent; border:none;
   color:var(--color-text-secondary);
   font-size:30px; line-height:1; width:30px; height:30px;
   display:flex; align-items:center; justify-content:center;
-  cursor:pointer; transition:color .25s ease; padding:0; border-radius:0;
+  cursor:pointer; transition:color .25s ease, transform .25s ease; padding:0; border-radius:0;
   font-weight:500;
 }
 .chat-plus-inline:hover { color:var(--color-text-primary); }
-.chat-plus-inline:active { transform:translateY(calc(-50% - 2px)) scale(0.9); }
+.chat-plus-inline:active { transform:scale(.9); }
 
 /* Añadir espacio interno cuando hay + absoluto */
 .chat-input-wrapper-has-plus .chat-textarea-new { padding-left:60px; }
+.chat-input-wrapper-has-plus .chat-textarea-new { padding-bottom:14px; }
+.chat-input-wrapper-has-plus .chat-textarea-new { padding-left:60px; }
+
+/* Iconos fijos (adjuntos + emoji) dentro del input */
+/* Eliminados estilos fijos: se vuelve al botón inline minimalista sin fondo */
+.fixed-inline { position:absolute; bottom:10px; top:auto; transform:none; background:transparent; border:none; width:30px; height:30px; }
+.fixed-inline:hover { background:transparent; }
+.fixed-inline.active { color:var(--color-primary); }
+.chat-plus-inline.fixed-inline { left:14px; }
+
+/* Ajustar pill para no tapar iconos */
+.attachment-pill { top:10px; left:60px; max-width:58%; }
+.chat-input-wrapper-new.has-attachment { padding-top:56px; }
 
 /* Previsualización de archivo adjunto pendiente */
-.chat-input-wrapper-new.has-attachment { padding-top:60px; }
-.chat-attachment-preview { position:absolute; left:12px; top:8px; right:70px; display:flex; gap:12px; background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:18px; padding:10px 14px; align-items:center; box-shadow:0 4px 14px -4px rgba(0,0,0,.15); animation:fadeIn .18s ease; }
-.chat-attachment-preview:before { content:"Archivo adjunto"; position:absolute; top:-8px; left:14px; font-size:10px; background:var(--color-bg-secondary); padding:0 6px; line-height:1.2; letter-spacing:.5px; text-transform:uppercase; color:var(--color-text-secondary); }
-.cap-icon { width:42px; height:48px; border-radius:14px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 10px -2px rgba(99,102,241,.5); }
-.cap-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
-.cap-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.cap-meta { display:flex; align-items:center; gap:6px; font-size:11px; opacity:.75; font-weight:500; }
-.cap-dot { width:4px; height:4px; background:currentColor; border-radius:50%; opacity:.5; }
-.cap-ext { font-size:10px; padding:3px 8px 3px; border-radius:10px; background:rgba(99,102,241,.15); color:var(--color-primary); letter-spacing:.5px; font-weight:600; }
-.cap-remove { background:var(--color-bg-primary); border:1px solid var(--color-border); width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--color-text-secondary); transition:.2s; flex-shrink:0; }
-.cap-remove:hover { background:var(--color-bg-tertiary); color:var(--color-text-primary); }
-.cap-remove:active { transform:scale(.9); }
+.chat-input-wrapper-new.has-attachment { padding-top:54px; }
+@keyframes pillIn { from { transform:translateY(4px); opacity:0;} to { transform:translateY(0); opacity:1;} }
+.attachment-pill { position:absolute; left:14px; top:8px; display:flex; align-items:center; gap:10px; background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:14px; padding:8px 14px 8px 10px; max-width:62%; box-shadow:0 2px 8px rgba(0,0,0,.12); animation:pillIn .25s cubic-bezier(.4,0,.2,1); cursor:pointer; }
+.attachment-pill:hover { background:var(--color-bg-tertiary); }
+.ap-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,.3); }
+.ap-info { flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.1; }
+.ap-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ap-meta { font-size:11px; font-weight:500; color:var(--color-text-secondary); }
+.ap-remove { background:var(--color-bg-primary); border:1px solid var(--color-border); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; line-height:1; color:var(--color-text-secondary); transition:.18s; flex-shrink:0; }
+.ap-remove:hover { background:var(--color-bg-tertiary); color:var(--color-text-primary); }
+.ap-remove:active { transform:scale(.85); }
 .chat-file-caption { margin:10px 0 0; font-size:13px; line-height:1.4; font-style:italic; opacity:.85; }
 
 /* Ajustes del picker de emojis para integrarlo visualmente */

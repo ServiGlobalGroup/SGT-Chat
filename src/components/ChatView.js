@@ -180,6 +180,24 @@ function ChatView({ contact, messages, onSendMessage, onAddReminder }) {
     return parts.pop().toLowerCase().slice(0,6);
   };
 
+  const getFileKind = (file) => {
+    if(!file) return { label:'Archivo', color:'#6366f1' };
+    const ext = getExt(file.name||'');
+    const map = [
+      { exts:['pdf'], label:'Documento PDF', color:'#dc2626' },
+      { exts:['doc','docx'], label:'Documento Word', color:'#2563eb' },
+      { exts:['xls','xlsx'], label:'Hoja de cálculo', color:'#16a34a' },
+      { exts:['csv'], label:'Datos CSV', color:'#0d9488' },
+      { exts:['ppt','pptx'], label:'Presentación', color:'#d97706' },
+      { exts:['txt','md'], label:'Texto plano', color:'#6b7280' },
+      { exts:['png','jpg','jpeg','gif','webp','svg'], label:'Imagen', color:'#7c3aed' },
+      { exts:['mp4','mov','avi','mkv'], label:'Video', color:'#0d9488' },
+      { exts:['mp3','wav','ogg','flac'], label:'Audio', color:'#9333ea' }
+    ];
+    for(const g of map){ if(g.exts.includes(ext)) return { label:g.label, color:g.color }; }
+    return { label:'Archivo', color:'#6366f1' };
+  };
+
   const handleCopyMessage = (m) => {
     const content = m.type === 'file' ? m.filename : m.text;
     if (!content) return;
@@ -303,28 +321,22 @@ function ChatView({ contact, messages, onSendMessage, onAddReminder }) {
       </div>
       <div className="chat-input-container-new">
         <div className={`chat-input-wrapper-new chat-input-wrapper-has-plus ${pendingFile? 'has-attachment':''}`}>
-            {pendingFile && (
-              <div className="chat-attachment-preview" aria-label="Archivo adjunto pendiente">
-                <div className="cap-icon" aria-hidden="true"><FileText size={18} /></div>
-                <div className="cap-info">
-                  <div className="cap-name" title={pendingFile.name}>{pendingFile.name}</div>
-                  <div className="cap-meta">
-                    <span>{humanFileSize(pendingFile.size)}</span>
-                    {getExt(pendingFile.name) && <span className="cap-dot" />}
-                    {getExt(pendingFile.name) && <span className="cap-ext">{getExt(pendingFile.name)}</span>}
-                  </div>
+            {pendingFile && (()=>{ const kind=getFileKind(pendingFile); return (
+              <div className="attachment-pill" aria-label={`Archivo adjunto: ${pendingFile.name}`} onDoubleClick={()=> triggerFileDialog()}>
+                <div className="ap-icon" style={{backgroundColor:kind.color}} aria-hidden="true"><FileText size={16} /></div>
+                <div className="ap-info">
+                  <div className="ap-name" title={pendingFile.name}>{pendingFile.name}</div>
+                  <div className="ap-meta">{kind.label}</div>
                 </div>
-                <button type="button" className="cap-remove" aria-label="Quitar archivo" onClick={()=> setPendingFile(null)}>
-                  <X size={16} />
-                </button>
+                <button type="button" className="ap-remove" aria-label="Quitar archivo" onClick={(e)=>{ e.stopPropagation(); setPendingFile(null); }}>×</button>
               </div>
-            )}
+            ); })()}
             <Tooltip.Provider delayDuration={300} skipDelayDuration={100}>
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <button
                     type="button"
-                    className={`chat-plus-inline ${showActions ? 'active' : ''}`}
+                    className={`chat-plus-inline fixed-inline ${showActions ? 'active' : ''}`}
                     aria-label="Abrir menú de acciones"
                     aria-haspopup="true"
                     aria-expanded={showActions}
