@@ -28,12 +28,6 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
       badge: totalUnread > 0 ? totalUnread : null
     },
     { 
-      id: 'contacts', 
-      icon: Users, 
-      label: 'Contactos', 
-      description: 'Gestionar tu lista de contactos'
-    },
-    { 
       id: 'calendar', 
       icon: Calendar, 
       label: 'Calendario', 

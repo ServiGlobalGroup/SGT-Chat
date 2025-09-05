@@ -644,3 +644,106 @@
 }
 
 /* Eliminada toda la sección de estilos de chat (área, mensajes, input) */
+
+/* === Páginas genéricas (Contactos, Calendario, Archivos, Configuración) === */
+.page-container { flex:1; display:flex; flex-direction:column; background:var(--color-bg-primary); min-height:100vh; }
+.page-header { padding:24px 28px 18px; border-bottom:1px solid var(--color-border); display:flex; align-items:center; justify-content:space-between; backdrop-filter:blur(8px); }
+.page-header h1 { margin:0; font-size:26px; font-weight:700; background:linear-gradient(135deg,#6366f1 0%, #8b5cf6 60%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }
+.page-actions { display:flex; gap:12px; }
+.page-content { flex:1; padding:24px 28px 40px; overflow:auto; }
+.placeholder-center { display:flex; align-items:center; justify-content:center; }
+.placeholder-box { text-align:center; max-width:420px; padding:40px 32px; border:1px dashed var(--color-border); border-radius:20px; background:var(--color-bg-secondary); }
+.placeholder-box h3 { margin:0 0 8px; font-size:20px; }
+
+/* Botones utilitarios */
+.btn-primary, .btn-secondary { font-size:14px; font-weight:600; padding:10px 18px; border-radius:12px; border:1px solid transparent; cursor:pointer; background:var(--color-primary); color:#fff; transition:.25s; display:inline-flex; align-items:center; gap:6px; }
+.btn-secondary { background:var(--color-bg-secondary); color:var(--color-text-primary); border-color:var(--color-border); }
+.btn-primary:hover { filter:brightness(1.08); box-shadow:0 4px 12px rgba(99,102,241,.4); }
+.btn-secondary:hover { background:var(--color-bg-tertiary); }
+.btn-primary:disabled, .btn-secondary:disabled { opacity:.55; cursor:not-allowed; }
+
+/* Contactos grid */
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:20px; }
+.contact-card { background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:18px; padding:16px 16px 18px; display:flex; gap:14px; position:relative; overflow:hidden; transition:box-shadow .25s, transform .25s; }
+.contact-card:before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 85% 15%, rgba(99,102,241,0.18), transparent 65%); opacity:0; transition:opacity .4s; }
+.contact-card:hover { transform:translateY(-4px); box-shadow:0 8px 28px -8px rgba(0,0,0,0.35); }
+.contact-card:hover:before { opacity:1; }
+.contact-card-avatar { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#6366f1,#8b5cf6); font-weight:700; color:#fff; font-size:18px; position:relative; box-shadow:0 4px 12px rgba(0,0,0,.25); }
+.contact-card-avatar[data-status="online"] { box-shadow:0 0 0 2px rgba(34,197,94,.4),0 4px 12px -4px rgba(34,197,94,.5); }
+.contact-card-avatar[data-status="busy"] { box-shadow:0 0 0 2px rgba(239,68,68,.4),0 4px 12px -4px rgba(239,68,68,.5); }
+.contact-card-avatar[data-status="away"] { box-shadow:0 0 0 2px rgba(245,158,11,.4),0 4px 12px -4px rgba(245,158,11,.5); }
+.contact-card-body { flex:1; min-width:0; }
+.contact-card-body h3 { margin:0 0 4px; font-size:15px; font-weight:600; }
+.small { font-size:12px; }
+.muted { color:var(--color-text-muted); }
+.ellipsis { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.status-pill { padding:2px 8px; border-radius:12px; font-size:11px; text-transform:capitalize; background:var(--color-bg-tertiary); }
+.status-pill.online { background:#16a34a; color:#fff; }
+.status-pill.busy { background:#dc2626; color:#fff; }
+.status-pill.away { background:#d97706; color:#fff; }
+
+/* Settings */
+.settings-grid { display:grid; gap:22px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+.setting-card { background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:20px; padding:20px 20px 24px; display:flex; flex-direction:column; gap:12px; position:relative; overflow:hidden; }
+.setting-card:after { content:''; position:absolute; inset:0; background:linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15)); opacity:0; transition:opacity .35s; }
+.setting-card:hover:after { opacity:1; }
+.setting-card h3 { margin:0; font-size:16px; font-weight:600; }
+
+/* Animaciones simples */
+.fade-in { animation: fadeIn .35s ease; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(4px);} to { opacity:1; transform:none; } }
+
+/* === Calendario === */
+.calendar-page { background:var(--color-bg-primary); }
+.calendar-header { gap:24px; }
+.calendar-header { display:flex; align-items:center; }
+.cal-left { display:flex; align-items:center; gap:8px; }
+.cal-center { display:flex; flex-direction:column; align-items:center; gap:2px; flex:1; pointer-events:none; }
+.cal-month { font-size:17px; font-weight:600; letter-spacing:.5px; text-transform:capitalize; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.cal-year { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--color-text-secondary); opacity:.85; }
+.cal-actions { display:flex; align-items:center; gap:14px; }
+.calendar-nav { display:flex; align-items:center; gap:12px; }
+.calendar-title { margin:0; font-size:20px; font-weight:600; letter-spacing:.5px; text-transform:capitalize; font-family:inherit; }
+.cal-nav-btn { width:38px; height:38px; border-radius:10px; border:1px solid var(--color-border); background:var(--color-bg-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.22s; color:var(--color-text-secondary); }
+.cal-nav-btn:hover { background:var(--color-bg-tertiary); color:var(--color-text-primary); box-shadow:0 2px 6px -2px rgba(0,0,0,.4); }
+.cal-nav-btn:active { transform:translateY(1px); }
+.cal-today-btn { background:var(--color-bg-secondary); border:1px solid var(--color-border); padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:.25s; }
+.cal-today-btn:hover { background:var(--color-bg-tertiary); }
+.btn-icon { display:inline-flex; align-items:center; gap:8px; }
+
+.calendar-content { padding:10px 20px 16px; display:flex; flex-direction:column; flex:1; position:relative; overflow:hidden; }
+.calendar-grid { width:100%; margin:0; display:flex; flex-direction:column; gap:8px; flex:1; min-height:0; }
+.calendar-weekdays { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; padding:0 2px; }
+.calendar-weekday { text-align:center; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--color-text-secondary); padding:6px 0; }
+.calendar-week { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; flex:1; min-height:0; }
+.calendar-day { position:relative; background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:14px; padding:6px 6px 4px; display:flex; flex-direction:column; gap:4px; cursor:default; transition:background .25s, box-shadow .25s, transform .25s; overflow:hidden; }
+.calendar-day:hover { background:var(--color-bg-tertiary); box-shadow:0 4px 14px -4px rgba(0,0,0,.35); transform:translateY(-2px); }
+.calendar-day.outside { opacity:.45; filter:grayscale(.3); }
+.calendar-day.today { border:1px solid var(--color-primary); box-shadow:0 0 0 2px rgba(99,102,241,.4); }
+.calendar-day.has-reminders:not(.outside) { border-color: var(--color-primary); }
+.calendar-day-number { font-size:12px; font-weight:600; width:28px; height:24px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--color-text-secondary); cursor:pointer; }
+.calendar-day.today .calendar-day-number { background:var(--color-primary); color:#fff; }
+.calendar-reminders { display:flex; flex-direction:column; gap:4px; overflow:hidden; }
+.reminder-pill { position:relative; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:4px 24px 4px 8px; border-radius:10px; font-size:11px; line-height:1.2; font-weight:500; box-shadow:0 2px 6px -2px rgba(0,0,0,.4); display:flex; align-items:center; }
+.reminder-text { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.reminder-del { position:absolute; right:4px; top:2px; background:transparent; border:none; color:#fff; font-size:14px; cursor:pointer; line-height:1; padding:2px; opacity:.7; }
+.reminder-del:hover { opacity:1; }
+.reminder-more { font-size:10px; font-weight:600; background:var(--color-bg-primary); border:1px solid var(--color-border); padding:2px 6px; border-radius:8px; align-self:flex-start; cursor:default; }
+/* .calendar-hint eliminado */
+/* Forzar la página de calendario a ocupar exactamente el viewport sin crear scroll extra */
+.calendar-page.page-container { height:100vh; min-height:0; }
+
+/* Dialog (recordatorios) */
+.dialog-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); backdrop-filter:blur(4px); animation: fadeIn .25s ease; }
+.dialog-content { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:20px; width:100%; max-width:460px; padding:0; display:flex; flex-direction:column; box-shadow:0 10px 40px -8px rgba(0,0,0,.55); animation: scaleIn .28s cubic-bezier(.4,0,.2,1); }
+@keyframes scaleIn { from { opacity:0; transform:translate(-50%,-46%) scale(.92);} to { opacity:1; transform:translate(-50%,-50%) scale(1);} }
+.dialog-header { display:flex; align-items:center; justify-content:space-between; padding:18px 22px 14px; border-bottom:1px solid var(--color-border); }
+.dialog-header h2, .dialog-header DialogTitle, .dialog-header dialog-title { margin:0; font-size:18px; font-weight:600; }
+.dialog-body { padding:18px 22px 8px; display:flex; flex-direction:column; gap:18px; }
+.dialog-footer { padding:14px 22px 20px; display:flex; justify-content:flex-end; gap:12px; }
+.dialog-close { background:var(--color-bg-tertiary); border:1px solid var(--color-border); width:32px; height:32px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.25s; }
+.dialog-close:hover { background:var(--color-bg-secondary); }
+.form-field { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:500; }
+.form-field input[type=date], .form-field textarea { background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:10px; padding:10px 12px; font-family:inherit; font-size:14px; resize:vertical; color:var(--color-text-primary); }
+.form-field input[type=date]:focus, .form-field textarea:focus { outline:none; border-color:var(--color-primary); box-shadow:0 0 0 2px rgba(99,102,241,.3); }
+

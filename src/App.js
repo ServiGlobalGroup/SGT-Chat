@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ContactList from './components/ContactList';
 import ChatView from './components/ChatView';
+import CalendarPage from './components/CalendarPage';
+import FilesPage from './components/FilesPage';
+import SettingsPage from './components/SettingsPage';
 import './styles/App.css';
 
 function App() {
@@ -178,18 +181,31 @@ function App() {
         onSectionChange={setActiveSection}
         totalUnread={totalUnread}
       />
-      <ContactList 
-        contacts={orderedContacts}
-        selectedContactId={selectedContactId}
-        onSelectContact={handleSelectContact}
-  onTogglePin={togglePinContact}
-  onDeleteContact={deleteContact}
-      />
-      <ChatView 
-        contact={selectedContact}
-        messages={currentMessages}
-        onSendMessage={handleSendMessage}
-      />
+      {activeSection === 'chats' && (
+        <>
+          <ContactList 
+            contacts={orderedContacts}
+            selectedContactId={selectedContactId}
+            onSelectContact={handleSelectContact}
+	onTogglePin={togglePinContact}
+            onDeleteContact={deleteContact}
+          />
+          <ChatView 
+            contact={selectedContact}
+            messages={currentMessages}
+            onSendMessage={handleSendMessage}
+          />
+        </>
+      )}
+      {activeSection === 'calendar' && (
+        <CalendarPage />
+      )}
+      {activeSection === 'files' && (
+        <FilesPage />
+      )}
+      {activeSection === 'settings' && (
+        <SettingsPage />
+      )}
     </div>
   );
 }
