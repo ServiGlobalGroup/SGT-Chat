@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { Check } from 'lucide-react';
 import * as Avatar from '@radix-ui/react-avatar';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {
@@ -13,6 +15,7 @@ import {
 
 function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [userStatus, setUserStatus] = useState('online'); // 'online' | 'busy' | 'away'
   const navRef = useRef(null);
   const [indicatorStyle, setIndicatorStyle] = useState({ opacity: 0 });
 
@@ -121,13 +124,46 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
       <div className="sidebar">
         {/* Header con avatar */}
         <div className="sidebar-header">
-          <Avatar.Root className="sidebar-avatar">
-            <Avatar.Image src="/api/placeholder/44/44" alt="Mi avatar" />
-            <Avatar.Fallback className="sidebar-avatar-fallback">
-              TU
-            </Avatar.Fallback>
-          </Avatar.Root>
-          <div className="sidebar-status-indicator online" />
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button className="avatar-trigger-btn" aria-label="Cambiar estado">
+                <Avatar.Root className="sidebar-avatar">
+                  <Avatar.Image src="/api/placeholder/44/44" alt="Mi avatar" />
+                  <Avatar.Fallback className="sidebar-avatar-fallback">TU</Avatar.Fallback>
+                </Avatar.Root>
+                <div className={`sidebar-status-indicator ${userStatus}`} />
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content className="status-menu" side="right" sideOffset={12} align="start">
+              <DropdownMenu.Label className="status-menu-label">Estado</DropdownMenu.Label>
+              <DropdownMenu.Separator className="status-menu-separator" />
+              {[
+                { id: 'online', label: 'Conectado', color: '#22c55e', desc: 'Disponible para chatear' },
+                { id: 'busy', label: 'Ocupado', color: '#ef4444', desc: 'No molestar' },
+                { id: 'away', label: 'Ausente', color: '#f59e0b', desc: 'Volveré pronto' }
+              ].map(opt => {
+                const active = userStatus === opt.id;
+                return (
+                  <DropdownMenu.Item
+                    key={opt.id}
+                    className={`status-menu-item ${active ? 'active' : ''}`}
+                    onSelect={() => setUserStatus(opt.id)}
+                  >
+                    <span className="status-dot" style={{ backgroundColor: opt.color }} />
+                    <span className="status-texts">
+                      <strong>{opt.label}</strong>
+                      <small>{opt.desc}</small>
+                    </span>
+                    {active && (
+                      <span className="status-check" aria-hidden="true">
+                        <Check size={14} />
+                      </span>
+                    )}
+                  </DropdownMenu.Item>
+                );
+              })}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </div>
         
         {/* Navegación principal */}
