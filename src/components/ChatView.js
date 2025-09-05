@@ -3,7 +3,7 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import * as Dialog from '@radix-ui/react-dialog';
 import EmojiPicker from './EmojiPicker';
 import '../styles/chat.css';
-import { Smile, Paperclip, FileText, Send, Copy, CalendarPlus, Download, X } from 'lucide-react';
+import { Smile, Paperclip, FileText, ArrowUp, Copy, CalendarPlus, Download, X } from 'lucide-react';
 
 // Genera un color determinista basado en el nombre
 const generateAvatarColor = (name) => {
@@ -372,14 +372,14 @@ function ChatView({ contact, messages, onSendMessage, onAddReminder }) {
             className="chat-textarea-new"
             rows={1}
           />
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleSubmit}
             disabled={!text.trim() && !pendingFile}
-            className="chat-send-btn-new"
+            className={`chat-send-circle ${ (text.trim() || pendingFile) ? 'ready' : ''}`}
             aria-label="Enviar mensaje"
           >
-            <Send size={22} strokeWidth={2} />
+            <ArrowUp size={20} strokeWidth={2} />
           </button>
             <input ref={fileInputRef} type="file" style={{display:'none'}} onChange={handleSelectFile} />
             {showActions && (

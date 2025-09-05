@@ -174,40 +174,56 @@
 }
 
 .chat-send-btn-new {
-  margin-left: 8px;
-  margin-bottom: 2px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--color-primary);
+  margin-left: 10px;
+  margin-bottom: 8px;
+  width: 38px;
+  height: 38px;
   border: none;
-  color: white;
+  background: transparent;
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color .25s ease, transform .25s ease;
   flex-shrink: 0;
   line-height: 1;
+  font-size: 22px;
+  padding:0;
 }
-.chat-send-btn-new svg { display:block; }
+.chat-send-btn-new svg { display:block; width:22px; height:22px; }
+.chat-send-btn-new:hover:not(:disabled) { color: var(--color-text-primary); }
+.chat-send-btn-new:active:not(:disabled) { transform: scale(.9); }
+.chat-send-btn-new:disabled { opacity:.45; cursor:not-allowed; }
+.chat-input-wrapper-new:focus-within .chat-send-btn-new:not(:disabled) { color: var(--color-primary); }
 
-.chat-send-btn-new:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+/* Nuevo botón enviar circular estilo ChatGPT */
+.chat-send-circle {
+  margin-left:8px;
+  margin-bottom:8px;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid var(--color-border);
+  background:var(--color-bg-primary);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--color-text-secondary);
+  cursor:pointer;
+  transition:background .25s ease, color .25s ease, border-color .25s ease, transform .25s ease;
+  flex-shrink:0;
+  padding:0;
 }
+.chat-send-circle svg { display:block; }
+.chat-send-circle:hover:not(:disabled) { background:var(--color-bg-tertiary); color:var(--color-text-primary); }
+.chat-send-circle:active:not(:disabled) { transform:scale(.9); }
+.chat-send-circle:disabled { opacity:.45; cursor:not-allowed; }
+.chat-send-circle.ready { border-color:var(--color-primary); color:var(--color-primary); }
+.chat-input-wrapper-new:focus-within .chat-send-circle.ready { background:var(--color-primary); color:#fff; }
 
-.chat-send-btn-new:disabled {
-  background: var(--color-text-muted);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.chat-send-btn-new:active:not(:disabled) {
-  transform: translateY(0);
-}
+/* Ajustar textarea para alinear verticalmente con botones de 42px */
+.chat-textarea-new { padding-top:12px; padding-bottom:12px; }
 
 /* === Emoji Picker === */
 .emoji-toggle-btn {
@@ -310,21 +326,23 @@
 
 /* Botón + inline (sin contenedor voluminoso) */
 .chat-plus-inline {
-  position:absolute; left:14px; bottom:10px; top:auto; /* posición fija al fondo */
-  background:transparent; border:none;
+  position:absolute; left:14px; bottom:8px; top:auto; /* posición fija al fondo */
+  width:42px; height:42px;
+  border-radius:50%;
+  background:var(--color-bg-primary);
+  border:1px solid var(--color-border);
   color:var(--color-text-secondary);
-  font-size:30px; line-height:1; width:30px; height:30px;
+  font-size:28px; line-height:1;
   display:flex; align-items:center; justify-content:center;
-  cursor:pointer; transition:color .25s ease, transform .25s ease; padding:0; border-radius:0;
-  font-weight:500;
+  cursor:pointer; transition:background .25s ease, color .25s ease, border-color .25s ease, transform .25s ease; padding:0; font-weight:500;
 }
-.chat-plus-inline:hover { color:var(--color-text-primary); }
+.chat-plus-inline:hover { background:var(--color-bg-tertiary); color:var(--color-text-primary); }
 .chat-plus-inline:active { transform:scale(.9); }
+.chat-plus-inline.active { border-color:var(--color-primary); color:var(--color-primary); }
 
 /* Añadir espacio interno cuando hay + absoluto */
-.chat-input-wrapper-has-plus .chat-textarea-new { padding-left:60px; }
-.chat-input-wrapper-has-plus .chat-textarea-new { padding-bottom:14px; }
-.chat-input-wrapper-has-plus .chat-textarea-new { padding-left:60px; }
+/* Ajustes de padding para nuevo tamaño (42px) del botón + */
+.chat-input-wrapper-has-plus .chat-textarea-new { padding-left:76px; padding-bottom:14px; }
 
 /* Iconos fijos (adjuntos + emoji) dentro del input */
 /* Eliminados estilos fijos: se vuelve al botón inline minimalista sin fondo */
@@ -334,11 +352,12 @@
 .chat-plus-inline.fixed-inline { left:14px; }
 
 /* Ajustar pill para no tapar iconos */
-.attachment-pill { top:10px; left:60px; max-width:58%; }
+/* Reposicionar pill para no superponer botón + ampliado */
+.attachment-pill { top:10px; left:76px; max-width:56%; }
 .chat-input-wrapper-new.has-attachment { padding-top:56px; }
 
 /* Previsualización de archivo adjunto pendiente */
-.chat-input-wrapper-new.has-attachment { padding-top:54px; }
+.chat-input-wrapper-new.has-attachment { padding-top:60px; }
 @keyframes pillIn { from { transform:translateY(4px); opacity:0;} to { transform:translateY(0); opacity:1;} }
 .attachment-pill { position:absolute; left:14px; top:8px; display:flex; align-items:center; gap:10px; background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:14px; padding:8px 14px 8px 10px; max-width:62%; box-shadow:0 2px 8px rgba(0,0,0,.12); animation:pillIn .25s cubic-bezier(.4,0,.2,1); cursor:pointer; }
 .attachment-pill:hover { background:var(--color-bg-tertiary); }
