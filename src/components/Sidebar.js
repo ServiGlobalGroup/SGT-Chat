@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as Avatar from '@radix-ui/react-avatar';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {
@@ -13,6 +13,8 @@ import {
 
 function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const navRef = useRef(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({ opacity: 0 });
 
   const navigationItems = [
     { 
@@ -99,6 +101,21 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
     );
   };
 
+  useEffect(() => {
+    // Recalcular posición del indicador cuando cambia la sección activa o el totalUnread (badge puede alterar altura)
+    const activeEl = navRef.current?.querySelector('.sidebar-nav-item.active');
+    if (activeEl && navRef.current) {
+      const navRect = navRef.current.getBoundingClientRect();
+      const elRect = activeEl.getBoundingClientRect();
+      const top = elRect.top - navRect.top;
+      setIndicatorStyle({
+        opacity: 1,
+        top: top + 'px',
+        height: elRect.height + 'px'
+      });
+    }
+  }, [activeSection, totalUnread]);
+
   return (
     <Tooltip.Provider delayDuration={300}>
       <div className="sidebar">
@@ -114,7 +131,8 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
         </div>
         
         {/* Navegación principal */}
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" ref={navRef}>
+          <div className="sidebar-active-indicator" style={indicatorStyle} />
           {navigationItems.map((item) => 
             renderNavItem(item, activeSection === item.id)
           )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ContactList from './components/ContactList';
 import ChatView from './components/ChatView';
@@ -68,11 +68,37 @@ function App() {
 
   // Mensajes por contacto (id => array)
   const [messagesByContact, setMessagesByContact] = useState({});
+  // Intervalo para lectura progresiva
+  const readingIntervalRef = useRef(null);
 
   const handleSelectContact = (id) => {
     setSelectedContactId(id);
-    // Marcar como leído: eliminar burbuja de notificación
-    setContacts(prev => prev.map(c => c.id === id ? { ...c, unreadCount: 0 } : c));
+    // Limpiar intervalo anterior si existía
+    if (readingIntervalRef.current) {
+      clearInterval(readingIntervalRef.current);
+      readingIntervalRef.current = null;
+    }
+    // Lectura progresiva: reducimos de uno en uno para reflejar animación de "lectura"
+    setContacts(prev => prev.map(c => c.id === id ? { ...c } : c));
+    const targetContact = contacts.find(c => c.id === id);
+    if (targetContact && targetContact.unreadCount > 0) {
+      readingIntervalRef.current = setInterval(() => {
+        setContacts(prev => prev.map(c => {
+          if (c.id === id) {
+            if (c.unreadCount <= 1) {
+              // Último -> limpiar intervalo
+              if (readingIntervalRef.current) {
+                clearInterval(readingIntervalRef.current);
+                readingIntervalRef.current = null;
+              }
+              return { ...c, unreadCount: 0 };
+            }
+            return { ...c, unreadCount: c.unreadCount - 1 };
+          }
+          return c;
+        }));
+      }, 450); // velocidad de decremento
+    }
     // Inicializar array si no existe
     setMessagesByContact(prev => prev[id] ? prev : { ...prev, [id]: sampleMessages(id) });
   };
@@ -96,6 +122,18 @@ function App() {
 
   const togglePinContact = (contactId) => {
     setContacts(prev => prev.map(c => c.id === contactId ? { ...c, pinned: !c.pinned } : c));
+  };
+
+  const deleteContact = (contactId) => {
+    setContacts(prev => prev.filter(c => c.id !== contactId));
+    setMessagesByContact(prev => {
+      const clone = { ...prev };
+      delete clone[contactId];
+      return clone;
+    });
+    if (selectedContactId === contactId) {
+      setSelectedContactId(null);
+    }
   };
 
   // Mensajes de ejemplo iniciales
@@ -145,6 +183,7 @@ function App() {
         selectedContactId={selectedContactId}
         onSelectContact={handleSelectContact}
   onTogglePin={togglePinContact}
+  onDeleteContact={deleteContact}
       />
       <ChatView 
         contact={selectedContact}

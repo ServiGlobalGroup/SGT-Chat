@@ -107,6 +107,29 @@
   align-items: center;
   padding: 0 8px;
   overflow: visible;
+  position: relative;
+}
+
+/* Barra indicadora animada */
+.sidebar-active-indicator {
+  position: absolute;
+  left: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #ffffff 0%, #e0e7ff 100%);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.4),0 4px 12px rgba(0,0,0,0.15);
+  transition: top 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-nav-item {
+  /* existing rules below ... keep transitions */
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease;
+}
+
+.sidebar-nav-item:active {
+  transform: translateY(0) scale(0.95);
 }
 
 .sidebar-footer {
@@ -300,6 +323,42 @@
   position: relative;
 }
 
+/* Variante compacta global (aplicada a .contact-list .contact-item cuando .contact-list tiene clase compact) */
+.contact-list.compact .contact-item {
+  padding: 10px 14px;
+  margin: 2px 6px;
+  border-radius: 10px;
+}
+
+.contact-list.compact .avatar-round,
+.contact-list.compact .contact-avatar-new {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+  margin-right: 10px;
+}
+
+.contact-list.compact .contact-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.contact-list.compact .contact-last-message {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.contact-list.compact .contact-timestamp {
+  font-size: 11px;
+}
+
+.contact-list.compact .pin-btn, .contact-list.compact .delete-btn {
+  padding: 2px;
+}
+
+.contact-list.compact .contact-meta { gap: 6px; }
+.contact-list.compact .contact-actions { gap: 2px; }
+
 .contact-item::before {
   content: '';
   position: absolute;
@@ -391,6 +450,12 @@
   gap: 8px;
 }
 
+.contact-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .pin-btn {
   background: transparent;
   border: none;
@@ -417,6 +482,28 @@
 
 .pin-btn.active:hover {
   background: rgba(99,102,241,0.18);
+}
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: var(--color-bg-primary);
+  color: #ef4444;
+}
+
+.delete-btn:active {
+  transform: scale(0.92);
 }
 
 .contact-name {

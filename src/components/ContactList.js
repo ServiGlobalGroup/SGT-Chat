@@ -1,9 +1,9 @@
 import React from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
-import { Search, Pin } from 'lucide-react';
+import { Search, Pin, Trash2 } from 'lucide-react';
 import '../styles/avatars.css';
 
-function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin }) {
+function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin, onDeleteContact }) {
   // Función para generar color único basado en el nombre
   const generateAvatarColor = (name) => {
     const colors = [
@@ -38,7 +38,7 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
   };
 
   return (
-    <div className="contact-list">
+  <div className="contact-list compact">
       <div className="contact-list-header">
         <h2>Chats</h2>
         <div className="search-container">
@@ -63,8 +63,8 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
                   key={contact.id}
                   className={`contact-item ${selectedContactId === contact.id ? 'selected' : ''} ${contact.pinned ? 'pinned' : ''}`}
                   onClick={(e) => {
-                    // Evitar que click en pin seleccione contacto
-                    if (e.target.closest('.pin-btn')) return;
+                    // Evitar que click en botones de acción seleccione contacto
+                    if (e.target.closest('.pin-btn') || e.target.closest('.delete-btn')) return;
                     onSelectContact && onSelectContact(contact.id);
                   }}
                 >
@@ -83,14 +83,28 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
                       {contact.unreadCount > 0 && (
                         <span className="contact-unread-badge">{contact.unreadCount}</span>
                       )}
-                      <button 
-                        type="button"
-                        className={`pin-btn ${contact.pinned ? 'active' : ''}`}
-                        title={contact.pinned ? 'Desfijar' : 'Fijar chat'}
-                        onClick={() => onTogglePin && onTogglePin(contact.id)}
-                      >
-                        <Pin size={14} />
-                      </button>
+                      <div className="contact-actions">
+                        <button 
+                          type="button"
+                          className={`pin-btn ${contact.pinned ? 'active' : ''}`}
+                          title={contact.pinned ? 'Desfijar' : 'Fijar chat'}
+                          onClick={() => onTogglePin && onTogglePin(contact.id)}
+                        >
+                          <Pin size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="delete-btn"
+                          title="Eliminar chat"
+                          onClick={() => {
+                            if (!onDeleteContact) return;
+                            const ok = window.confirm('¿Eliminar este chat? Esta acción no se puede deshacer.');
+                            if (ok) onDeleteContact(contact.id);
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <p className="contact-last-message">{contact.lastMessage}</p>
