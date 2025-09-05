@@ -672,7 +672,7 @@
 
 .contact-unread-badge {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
+  color: #fff;
   font-size: 11px;
   font-weight: 600;
   padding: 2px 6px;
@@ -682,9 +682,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-  animation: pulse-notification 2s infinite;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+  /* Animación eliminada para evitar cambio de tamaño constante */
+  animation: none;
+  transition: transform .25s ease, box-shadow .25s ease;
 }
+.contact-unread-badge:hover { transform: translateY(-2px); box-shadow:0 4px 10px -2px rgba(239,68,68,.55); }
 
 @keyframes pulse-notification {
   0%, 100% {

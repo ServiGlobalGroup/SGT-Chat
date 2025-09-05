@@ -68,11 +68,18 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
                     onSelectContact && onSelectContact(contact.id);
                   }}
                 >
-                  <div 
-                    className="avatar-round"
-                    style={{ backgroundColor: avatarColor }}
-                  >
-                    {initials}
+                  <div className="avatar-with-status">
+                    <div 
+                      className="avatar-round"
+                      style={{ backgroundColor: avatarColor }}
+                    >
+                      {initials}
+                    </div>
+                    <span 
+                      className={`avatar-status-indicator ${contact.status || 'offline'}`}
+                      title={contact.status}
+                      aria-label={`Estado ${contact.status}`}
+                    />
                   </div>
                 
                 <div className="contact-info">
