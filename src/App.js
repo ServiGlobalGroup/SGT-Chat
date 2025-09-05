@@ -72,6 +72,8 @@ function App() {
   const [messagesByContact, setMessagesByContact] = useState({});
   // Intervalo para lectura progresiva
   const readingIntervalRef = useRef(null);
+  // Recordatorios (simples)
+  const [reminders, setReminders] = useState([]); // {id, contactId, messageId, text, date, createdAt}
 
   const handleSelectContact = (id) => {
     setSelectedContactId(id);
@@ -142,6 +144,22 @@ function App() {
     if (selectedContactId === contactId) {
       setSelectedContactId(null);
     }
+  };
+
+  const addReminder = ({ contactId, messageId, text, date }) => {
+    setReminders(prev => [
+      ...prev,
+      {
+        id: Date.now() + '-' + Math.random().toString(36).slice(2,8),
+        contactId,
+        messageId,
+        text: text?.slice(0,300) || '(sin texto)',
+        date,
+        createdAt: Date.now()
+      }
+    ]);
+    // Futuro: integración con calendario real
+    console.log('Recordatorio añadido:', { contactId, messageId, text, date });
   };
 
   // Mensajes de ejemplo iniciales
@@ -217,6 +235,7 @@ function App() {
             contact={selectedContact}
             messages={currentMessages}
             onSendMessage={handleSendMessage}
+            onAddReminder={addReminder}
           />
         </>
       )}

@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import * as Dialog from '@radix-ui/react-dialog';
 import EmojiPicker from './EmojiPicker';
 import '../styles/chat.css';
-import { Smile, Paperclip, FileText, Send } from 'lucide-react';
+import { Smile, Paperclip, FileText, Send, Copy, CalendarPlus, Download, X } from 'lucide-react';
 
 // Genera un color determinista basado en el nombre
 const generateAvatarColor = (name) => {
@@ -19,10 +20,34 @@ const generateAvatarColor = (name) => {
 
 const getInitials = (name) => name.split(' ').map(w => w[0]?.toUpperCase()).slice(0,2).join('');
 
-function ChatView({ contact, messages, onSendMessage }) {
+function ChatView({ contact, messages, onSendMessage, onAddReminder }) {
   const [text, setText] = useState('');
+  const [lastCopiedId, setLastCopiedId] = useState(null);
+  const [lastDownloadedId, setLastDownloadedId] = useState(null);
+  const [lastReminderAddedId, setLastReminderAddedId] = useState(null);
+  // Estado modal recordatorio (versión dialog calendar)
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderMessage, setReminderMessage] = useState(null);
+  const [reminderText, setReminderText] = useState('');
+  const pad = n=>String(n).padStart(2,'0');
+  const todayStr = (()=>{ const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; })();
+  const [formDate, setFormDate] = useState(todayStr);
+  const startOfMonth = d=> new Date(d.getFullYear(), d.getMonth(),1);
+  const addMonths = (d,n)=> new Date(d.getFullYear(), d.getMonth()+n,1);
+  const formatKey = d=> `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const [pickerMonth, setPickerMonth] = useState(startOfMonth(new Date()));
+  const buildMatrix = (baseDate)=>{
+    const first=startOfMonth(baseDate); const firstDay=(first.getDay()+6)%7; const dim=new Date(first.getFullYear(), first.getMonth()+1,0).getDate(); const cells=[];
+    for(let i=0;i<firstDay;i++){ cells.push({date:new Date(first.getFullYear(), first.getMonth(), i-firstDay+1), outside:true}); }
+    for(let d=1; d<=dim; d++){ cells.push({date:new Date(first.getFullYear(), first.getMonth(), d), outside:false}); }
+    while(cells.length%7!==0){ const last=cells[cells.length-1].date; cells.push({date:new Date(last.getFullYear(), last.getMonth(), last.getDate()+1), outside:true}); }
+    const weeks=[]; for(let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7)); return weeks;
+  };
+  const pickerMatrix = useMemo(()=> buildMatrix(pickerMonth),[pickerMonth]);
+  const pickerMonthLabel = pickerMonth.toLocaleDateString('es-ES',{month:'long', year:'numeric'});
   const [showEmojis, setShowEmojis] = useState(false);
   const [showActions, setShowActions] = useState(false); // menú desplegable del botón +
+  const [pendingFile, setPendingFile] = useState(null); // archivo seleccionado aún no enviado
   const pickerRef = useRef(null);
   const endRef = useRef(null);
   const textareaRef = useRef(null);
@@ -93,8 +118,20 @@ function ChatView({ contact, messages, onSendMessage }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const value = text.trim();
-    if (!value) return;
-    onSendMessage(contact.id, value);
+    if (!value && !pendingFile) return; // nada que enviar
+    if (pendingFile) {
+      // Enviar como mensaje de archivo con posible caption
+      onSendMessage(contact.id, {
+        type: 'file',
+        filename: pendingFile.name,
+        size: pendingFile.size,
+        mime: pendingFile.type,
+        text: value || undefined
+      });
+      setPendingFile(null);
+    } else if (value) {
+      onSendMessage(contact.id, value);
+    }
     setText('');
   };
 
@@ -115,15 +152,64 @@ function ChatView({ contact, messages, onSendMessage }) {
   const handleSelectFile = (e) => {
     const file = e.target.files && e.target.files[0];
     if(!file || !contact) return;
-    // Enviar como mensaje de archivo usando protocolo flexible (objeto)
-    onSendMessage(contact.id, { type:'file', filename:file.name, size:file.size, mime:file.type });
+    setPendingFile(file); // solo preparar, no enviar
     // Reset input para permitir mismo archivo otra vez
     e.target.value='';
     setShowActions(false);
+    // Enfocar textarea para que usuario añada mensaje opcional
+    requestAnimationFrame(()=> textareaRef.current?.focus());
   };
 
   const triggerFileDialog = () => {
     fileInputRef.current?.click();
+  };
+
+  const humanFileSize = (bytes) => {
+    if (!bytes && bytes !== 0) return '';
+    const thresh = 1024;
+    if (bytes < thresh) return bytes + ' B';
+    const units = ['KB','MB','GB','TB'];
+    let u = -1;
+    do { bytes /= thresh; ++u; } while (bytes >= thresh && u < units.length - 1);
+    return bytes.toFixed(bytes < 10 ? 1 : 0) + ' ' + units[u];
+  };
+
+  const getExt = (name='') => {
+    const parts = name.split('.');
+    if (parts.length < 2) return '';
+    return parts.pop().toLowerCase().slice(0,6);
+  };
+
+  const handleCopyMessage = (m) => {
+    const content = m.type === 'file' ? m.filename : m.text;
+    if (!content) return;
+    navigator.clipboard?.writeText(content).then(()=>{
+      setLastCopiedId(m.id);
+      setTimeout(()=> setLastCopiedId(null), 1800);
+    }).catch(()=>{});
+  };
+
+  const handleAddReminder = (m) => {
+    setFormDate(todayStr);
+    setPickerMonth(startOfMonth(new Date()));
+    setReminderMessage(m);
+    setReminderText(m.type==='file'? m.filename : (m.text||''));
+    setReminderOpen(true);
+  };
+
+  const saveReminder = () => {
+    if(!onAddReminder || !reminderMessage) return;
+    onAddReminder({
+      contactId: contact.id,
+      messageId: reminderMessage.id,
+      text: reminderText || '(sin texto)',
+      date: formDate
+    });
+    setLastReminderAddedId(reminderMessage.id);
+    setTimeout(()=> setLastReminderAddedId(null), 1400);
+    setReminderOpen(false);
+    setReminderMessage(null);
+    setReminderText('');
   };
 
   if (!contact) {
@@ -159,29 +245,80 @@ function ChatView({ contact, messages, onSendMessage }) {
       </div>
       <div className="chat-messages-wrapper">
         <div className="chat-messages-list">
-          {messages.map(m => (
-            <div key={m.id} className={`chat-msg ${m.own ? 'own' : ''}`}>
-              <div className={`chat-msg-bubble ${m.type==='file'?'file':''}`}>
-                {m.type === 'file' ? (
-                  <div className="chat-file">
-                    <div className="chat-file-icon" aria-hidden="true"><FileText size={18} /></div>
-                    <div className="chat-file-meta">
-                      <strong className="chat-file-name">{m.filename}</strong>
-                      <span className="chat-file-size">{(m.size/1024).toFixed(1)} KB</span>
+          {messages.map(m => {
+            const ext = m.type === 'file' ? getExt(m.filename) : '';
+            return (
+              <div key={m.id} className={`chat-msg ${m.own ? 'own' : ''}`}>
+                <div className={`chat-msg-bubble ${m.type==='file'?'file':''} ${lastCopiedId===m.id?'copied':''} ${lastReminderAddedId===m.id?'reminder-added':''}`}>
+                  {m.type !== 'file' && (
+                    <div className="chat-msg-actions" aria-label="Acciones mensaje">
+                      <button className={`chat-msg-action ${lastCopiedId===m.id ? 'copied-anim' : ''}`} title="Copiar" onClick={()=>handleCopyMessage(m)} aria-label="Copiar mensaje">
+                        <Copy size={14} />
+                      </button>
+                      <button className="chat-msg-action" title="Añadir a recordatorios" onClick={()=>handleAddReminder(m)} aria-label="Añadir a recordatorios">
+                        <CalendarPlus size={14} />
+                      </button>
                     </div>
-                  </div>
-                ) : (
-                  <p>{m.text}</p>
-                )}
-                <span className="chat-msg-time">{new Date(m.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span>
+                  )}
+                  {m.type === 'file' && (
+                    <div className="chat-msg-actions" aria-label="Acciones archivo">
+                      <button className={`chat-msg-action ${lastDownloadedId===m.id?'downloading-anim':''}`} title="Descargar" onClick={()=>{
+                        const blob = new Blob(['Simulación de contenido'], { type: m.mime||'application/octet-stream' });
+                        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=m.filename||'archivo'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+                        setLastDownloadedId(m.id); setTimeout(()=> setLastDownloadedId(null), 800);
+                      }} aria-label="Descargar archivo">
+                        <Download size={14} />
+                      </button>
+                    </div>
+                  )}
+                  {m.type === 'file' ? (
+                    <>
+                      <div className="chat-file-card">
+                        <div className="chat-file-icon-wrap" aria-hidden="true">
+                          <FileText size={18} />
+                        </div>
+                        <div className="chat-file-info">
+                          <div className="chat-file-row">
+                            <strong className="chat-file-name" title={m.filename}>{m.filename}</strong>
+                          </div>
+                          <div className="chat-file-meta-line">
+                            <span className="chat-file-size">{humanFileSize(m.size)}</span>
+                            {ext && <span className="chat-file-dot" />}
+                            {ext && <span className="chat-file-ext-badge">{ext}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      {m.text && <p className="chat-file-caption">{m.text}</p>}
+                    </>
+                  ) : (
+                    <p>{m.text}</p>
+                  )}
+                  <span className="chat-msg-time" aria-label="Hora del mensaje">{new Date(m.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={endRef} />
         </div>
       </div>
       <div className="chat-input-container-new">
-        <div className="chat-input-wrapper-new chat-input-wrapper-has-plus">
+        <div className={`chat-input-wrapper-new chat-input-wrapper-has-plus ${pendingFile? 'has-attachment':''}`}>
+            {pendingFile && (
+              <div className="chat-attachment-preview" aria-label="Archivo adjunto pendiente">
+                <div className="cap-icon" aria-hidden="true"><FileText size={18} /></div>
+                <div className="cap-info">
+                  <div className="cap-name" title={pendingFile.name}>{pendingFile.name}</div>
+                  <div className="cap-meta">
+                    <span>{humanFileSize(pendingFile.size)}</span>
+                    {getExt(pendingFile.name) && <span className="cap-dot" />}
+                    {getExt(pendingFile.name) && <span className="cap-ext">{getExt(pendingFile.name)}</span>}
+                  </div>
+                </div>
+                <button type="button" className="cap-remove" aria-label="Quitar archivo" onClick={()=> setPendingFile(null)}>
+                  <X size={16} />
+                </button>
+              </div>
+            )}
             <Tooltip.Provider delayDuration={300} skipDelayDuration={100}>
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
@@ -226,7 +363,7 @@ function ChatView({ contact, messages, onSendMessage }) {
           <button 
             type="button" 
             onClick={handleSubmit}
-            disabled={!text.trim()}
+            disabled={!text.trim() && !pendingFile}
             className="chat-send-btn-new"
             aria-label="Enviar mensaje"
           >
@@ -261,6 +398,61 @@ function ChatView({ contact, messages, onSendMessage }) {
             )}
         </div>
       </div>
+      <Dialog.Root open={reminderOpen} onOpenChange={setReminderOpen}>
+        <Dialog.Portal>
+          {reminderOpen && <Dialog.Overlay className="dialog-overlay" />}
+          {reminderOpen && (
+            <Dialog.Content className="dialog-content reminder-dialog" aria-label="Nuevo recordatorio">
+              <div className="dialog-header">
+                <Dialog.Title>Nuevo recordatorio</Dialog.Title>
+                <Dialog.Close asChild>
+                  <button className="dialog-close" aria-label="Cerrar" onClick={()=> setReminderOpen(false)}>×</button>
+                </Dialog.Close>
+              </div>
+              <div className="dialog-body">
+                <div className="form-field">
+                  <span>Fecha</span>
+                  <div className="mini-date-picker" role="group" aria-label="Selector de fecha">
+                    <div className="mdp-header">
+                      <button type="button" className="mdp-nav" onClick={()=>setPickerMonth(m=>addMonths(m,-1))} aria-label="Mes anterior">‹</button>
+                      <span className="mdp-title">{pickerMonthLabel.charAt(0).toUpperCase()+pickerMonthLabel.slice(1)}</span>
+                      <button type="button" className="mdp-nav" onClick={()=>setPickerMonth(m=>addMonths(m,1))} aria-label="Mes siguiente">›</button>
+                    </div>
+                    <div className="mdp-weekdays" aria-hidden="true">{['L','M','X','J','V','S','D'].map(d=> <div key={d}>{d}</div>)}</div>
+                    <div className="mdp-grid">
+                      {pickerMatrix.map((week,wi)=>(
+                        <div key={wi} className="mdp-week">
+                          {week.map(cell=>{
+                            const key = formatKey(cell.date); const selected = key===formDate;
+                            return (
+                              <button key={key} type="button" className={`mdp-day ${cell.outside?'outside':''} ${selected?'selected':''}`} onClick={()=>{ if(!cell.outside) setFormDate(key); }} aria-pressed={selected} tabIndex={cell.outside?-1:0}>{cell.date.getDate()}</button>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <label className="form-field">
+                  <span>Descripción</span>
+                  <textarea rows={3} maxLength={200} value={reminderText} onChange={e=>setReminderText(e.target.value)} placeholder="Ej: Llamar a cliente" />
+                  <div className="char-counter">{reminderText.length}/200</div>
+                </label>
+                {reminderMessage && (
+                  <div className="form-field">
+                    <span>Origen</span>
+                    <div className="reminder-msg-preview">{reminderMessage.type==='file'? reminderMessage.filename : reminderMessage.text}</div>
+                  </div>
+                )}
+              </div>
+              <div className="dialog-footer">
+                <button className="btn-secondary" onClick={()=> setReminderOpen(false)}>Cancelar</button>
+                <button className="btn-primary" disabled={!reminderText.trim()} onClick={saveReminder}>Guardar</button>
+              </div>
+            </Dialog.Content>
+          )}
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
