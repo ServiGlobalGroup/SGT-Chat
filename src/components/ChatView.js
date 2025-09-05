@@ -105,8 +105,18 @@ function ChatView({ contact, messages, onSendMessage }) {
         <div className="chat-messages-list">
           {messages.map(m => (
             <div key={m.id} className={`chat-msg ${m.own ? 'own' : ''}`}>
-              <div className="chat-msg-bubble">
-                <p>{m.text}</p>
+              <div className={`chat-msg-bubble ${m.type==='file'?'file':''}`}>
+                {m.type === 'file' ? (
+                  <div className="chat-file">
+                    <div className="chat-file-icon" aria-hidden="true">📎</div>
+                    <div className="chat-file-meta">
+                      <strong className="chat-file-name">{m.filename}</strong>
+                      <span className="chat-file-size">{(m.size/1024).toFixed(1)} KB</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p>{m.text}</p>
+                )}
                 <span className="chat-msg-time">{new Date(m.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span>
               </div>
             </div>

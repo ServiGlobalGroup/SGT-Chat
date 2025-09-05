@@ -142,11 +142,29 @@ function App() {
   // Mensajes de ejemplo iniciales
   const sampleMessages = (id) => [
     { id: `${id}-1`, text: 'Hola 👋', own: false, timestamp: Date.now() - 600000 },
-    { id: `${id}-2`, text: 'Esto es una vista de ejemplo del chat.', own: false, timestamp: Date.now() - 550000 },
+    { id: `${id}-2`, text: 'Adjunto el documento.', own: false, timestamp: Date.now() - 580000 },
+    { id: `${id}-f1`, type: 'file', filename: 'informe-proyecto.pdf', size: 234567, mime: 'application/pdf', own: false, timestamp: Date.now() - 575000 },
+    { id: `${id}-3`, text: 'Perfecto, recibido ✅', own: true, timestamp: Date.now() - 550000 },
+    { id: `${id}-f2`, type: 'file', filename: 'captura.png', size: 84567, mime: 'image/png', own: true, timestamp: Date.now() - 530000 }
   ];
 
   const selectedContact = contacts.find(c => c.id === selectedContactId) || null;
   const currentMessages = selectedContact ? (messagesByContact[selectedContact.id] || sampleMessages(selectedContact.id)) : [];
+
+  // Lista agregada de archivos (enviados y recibidos)
+  const allFileMessages = contacts.flatMap(c => {
+    const msgs = messagesByContact[c.id] || sampleMessages(c.id);
+    return msgs.filter(m => m.type === 'file').map(m => ({
+      contactId: c.id,
+      contactName: c.name,
+      direction: m.own ? 'Enviado' : 'Recibido',
+      timestamp: m.timestamp,
+      filename: m.filename,
+      size: m.size,
+      mime: m.mime,
+      id: m.id
+    }));
+  }).sort((a,b)=> b.timestamp - a.timestamp);
 
   // Simular actualizaciones de estado en tiempo real
   useEffect(() => {
@@ -201,7 +219,7 @@ function App() {
         <CalendarPage />
       )}
       {activeSection === 'files' && (
-        <FilesPage />
+        <FilesPage files={allFileMessages} />
       )}
       {activeSection === 'settings' && (
         <SettingsPage />
