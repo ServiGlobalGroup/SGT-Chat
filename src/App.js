@@ -15,7 +15,8 @@ function App() {
       lastMessage: 'Hola, ¿cómo estás?',
       timestamp: '10:30',
   unreadCount: 2,
-  pinned: true
+  pinned: true,
+  lastActivity: Date.now() - 1000 * 60 * 5 // hace 5 min
     },
     {
       id: 2,
@@ -25,7 +26,8 @@ function App() {
       lastMessage: 'Perfecto, nos vemos mañana',
       timestamp: '09:15',
   unreadCount: 0,
-  pinned: false
+  pinned: false,
+  lastActivity: Date.now() - 1000 * 60 * 60 // hace 1 hora
     },
     {
       id: 3,
@@ -35,7 +37,8 @@ function App() {
       lastMessage: 'Gracias por la información',
       timestamp: 'Ayer',
   unreadCount: 1,
-  pinned: false
+  pinned: false,
+  lastActivity: Date.now() - 1000 * 60 * 60 * 24 // ayer
     },
     {
       id: 4,
@@ -45,7 +48,8 @@ function App() {
       lastMessage: 'Estoy en reunión, te escribo luego',
       timestamp: '08:45',
   unreadCount: 0,
-  pinned: false
+  pinned: false,
+  lastActivity: Date.now() - 1000 * 60 * 90 // hace 90 min
     },
     {
       id: 5,
@@ -55,7 +59,8 @@ function App() {
       lastMessage: '¿Podemos revisar el proyecto?',
       timestamp: '07:30',
   unreadCount: 3,
-  pinned: false
+  pinned: false,
+  lastActivity: Date.now() - 1000 * 60 * 150 // hace 150 min
     }
   ]);
 
@@ -85,17 +90,12 @@ function App() {
       ...c,
       lastMessage: text,
       timestamp: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),
+      lastActivity: Date.now()
     } : c));
   };
 
   const togglePinContact = (contactId) => {
-    setContacts(prev => {
-      const updated = prev.map(c => c.id === contactId ? { ...c, pinned: !c.pinned } : c);
-      // Orden estable: separar pinned y no pinned respetando orden original
-      const pinned = updated.filter(c => c.pinned);
-      const unpinned = updated.filter(c => !c.pinned);
-      return [...pinned, ...unpinned];
-    });
+    setContacts(prev => prev.map(c => c.id === contactId ? { ...c, pinned: !c.pinned } : c));
   };
 
   // Mensajes de ejemplo iniciales
@@ -125,8 +125,13 @@ function App() {
 
   const totalUnread = contacts.reduce((acc,c) => acc + (c.unreadCount || 0), 0);
 
-  // Orden derivada (ya mantenemos estable en togglePin, pero aseguramos en render)
-  const orderedContacts = [...contacts].sort((a,b) => (a.pinned === b.pinned) ? 0 : (a.pinned ? -1 : 1));
+  // Orden derivada: primero pinned por última actividad desc, luego no pinned por última actividad desc
+  const orderedContacts = [...contacts].sort((a,b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    const aTime = a.lastActivity || 0;
+    const bTime = b.lastActivity || 0;
+    return bTime - aTime; // más reciente primero
+  });
 
   return (
     <div className="app">
