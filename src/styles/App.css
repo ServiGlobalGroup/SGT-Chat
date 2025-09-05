@@ -281,6 +281,40 @@
   opacity: 0;
 }
 
+/* Logout botón estilo especial */
+.sidebar-nav-item.logout-item {
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+}
+.sidebar-nav-item.logout-item::before {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(239,68,68,0.12), rgba(220,38,38,0.08));
+  opacity:0; transition:.35s ease;
+}
+.sidebar-nav-item.logout-item::after {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.35), transparent 60%);
+  mix-blend-mode:overlay; opacity:0; transition:.5s ease;
+}
+.sidebar-nav-item.logout-item:hover {
+  color:#fff;
+  background:rgba(239,68,68,0.15);
+  box-shadow:0 6px 20px -4px rgba(239,68,68,0.45), 0 2px 8px -2px rgba(0,0,0,0.4);
+  transform:translateY(-3px) scale(1.05);
+  backdrop-filter: blur(10px) saturate(160%);
+}
+.sidebar-nav-item.logout-item:hover::before { opacity:1; }
+.sidebar-nav-item.logout-item:hover::after { opacity:.9; }
+.sidebar-nav-item.logout-item:active {
+  transform:translateY(-1px) scale(.97);
+  background:rgba(239,68,68,0.28);
+  box-shadow:0 4px 14px -4px rgba(239,68,68,0.6);
+}
+.sidebar-nav-item.logout-item svg { transition: transform .4s cubic-bezier(.4,0,.2,1); }
+.sidebar-nav-item.logout-item:hover svg { transform: rotate(-6deg) scale(1.12); }
+
 /* Animaciones campana notificaciones */
 @keyframes bellRing {
   0% { transform: rotate(0deg); }

@@ -70,7 +70,7 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
       <Tooltip.Root key={item.id}>
         <Tooltip.Trigger asChild>
           <button 
-            className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
+            className={`sidebar-nav-item ${item.id === 'logout' ? 'logout-item' : ''} ${isActive ? 'active' : ''}`}
             onClick={onClick || (() => onSectionChange && onSectionChange(item.id))}
           >
             <div className="sidebar-nav-icon-container">

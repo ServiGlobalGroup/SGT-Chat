@@ -169,10 +169,8 @@ function ChatArea({ selectedContact, messages, onSendMessage }) {
       <div className="chat-input-container">
         <Separator.Root className="chat-separator" />
         <form onSubmit={handleSubmit} className="chat-input-form">
-          <button type="button" className="chat-input-button">
-            <Plus size={20} />
-          </button>
           <div className="chat-input-wrapper">
+            <span className="chat-input-plus" aria-label="Agregar" role="button">+</span>
             <textarea
               ref={textareaRef}
               value={messageInput}
@@ -183,7 +181,7 @@ function ChatArea({ selectedContact, messages, onSendMessage }) {
               rows={1}
             />
             <button type="button" className="chat-input-button">
-              <Smile size={20} />
+              <Smile size={18} />
             </button>
           </div>
           <button 
