@@ -4,7 +4,6 @@ import ContactList from './components/ContactList';
 import ChatView from './components/ChatView';
 import CalendarPage from './components/CalendarPage';
 import FilesPage from './components/FilesPage';
-import SettingsPage from './components/SettingsPage';
 import './styles/App.css';
 
 function App() {
@@ -220,9 +219,6 @@ function App() {
       )}
       {activeSection === 'files' && (
         <FilesPage files={allFileMessages} />
-      )}
-      {activeSection === 'settings' && (
-        <SettingsPage />
       )}
     </div>
   );

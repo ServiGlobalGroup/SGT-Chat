@@ -51,12 +51,6 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
       active: notificationsEnabled
     },
     { 
-      id: 'settings', 
-      icon: Settings, 
-      label: 'Configuración', 
-      description: 'Ajustes de la aplicación'
-    },
-    { 
       id: 'logout', 
       icon: LogOut, 
       label: 'Cerrar Sesión', 
