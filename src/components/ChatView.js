@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import EmojiPicker from './EmojiPicker';
 import '../styles/chat.css';
+import { Smile, Paperclip, FileText, Send } from 'lucide-react';
 
 // Genera un color determinista basado en el nombre
 const generateAvatarColor = (name) => {
@@ -18,9 +21,14 @@ const getInitials = (name) => name.split(' ').map(w => w[0]?.toUpperCase()).slic
 
 function ChatView({ contact, messages, onSendMessage }) {
   const [text, setText] = useState('');
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [showActions, setShowActions] = useState(false); // menú desplegable del botón +
+  const pickerRef = useRef(null);
   const endRef = useRef(null);
   const textareaRef = useRef(null);
   const MAX_TEXTAREA_HEIGHT = 180; // px
+  const actionsRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,16 +66,29 @@ function ChatView({ contact, messages, onSendMessage }) {
     }
   }, [contact]);
 
-  if (!contact) {
-    return (
-      <div className="chat-panel chat-panel-empty">
-        <div className="chat-panel-placeholder">
-          <h3>Selecciona un contacto</h3>
-          <p>Elige alguien de la lista para ver la conversación.</p>
-        </div>
-      </div>
-    );
-  }
+  // Cerrar panel emojis con Escape (una sola vez, independiente del estado)
+  useEffect(()=>{
+    const onKey = (e) => { if (e.key === 'Escape'){ setShowEmojis(false); setShowActions(false);} };
+    window.addEventListener('keydown', onKey);
+    return ()=> window.removeEventListener('keydown', onKey);
+  },[]);
+
+  // Cerrar al hacer click fuera (acciones + emoji)
+  useEffect(()=>{
+    if(!(showEmojis || showActions)) return;
+    const handleClick = (e) => {
+      const target = e.target;
+      const clickedToggle = target.closest && target.closest('.chat-plus-inline');
+      if(clickedToggle) return;
+      const insidePicker = pickerRef.current && pickerRef.current.contains(target);
+      const insideActions = actionsRef.current && actionsRef.current.contains(target);
+      if(!insidePicker && !insideActions){
+        setShowEmojis(false); setShowActions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return ()=> document.removeEventListener('mousedown', handleClick);
+  },[showEmojis, showActions]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -80,6 +101,41 @@ function ChatView({ contact, messages, onSendMessage }) {
   const handleTextareaChange = (e) => {
     setText(e.target.value);
   };
+
+  const insertEmoji = (emoji) => {
+    setText(prev => prev + emoji); // TODO: insertar en posición del cursor en mejora futura
+    // Enfocar y ajustar altura
+    requestAnimationFrame(()=>{
+      textareaRef.current?.focus();
+      adjustTextareaHeight();
+    });
+    setShowEmojis(false);
+  };
+
+  const handleSelectFile = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if(!file || !contact) return;
+    // Enviar como mensaje de archivo usando protocolo flexible (objeto)
+    onSendMessage(contact.id, { type:'file', filename:file.name, size:file.size, mime:file.type });
+    // Reset input para permitir mismo archivo otra vez
+    e.target.value='';
+    setShowActions(false);
+  };
+
+  const triggerFileDialog = () => {
+    fileInputRef.current?.click();
+  };
+
+  if (!contact) {
+    return (
+      <div className="chat-panel chat-panel-empty">
+        <div className="chat-panel-placeholder">
+          <h3>Selecciona un contacto</h3>
+          <p>Elige alguien de la lista para ver la conversación.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chat-panel">
@@ -108,7 +164,7 @@ function ChatView({ contact, messages, onSendMessage }) {
               <div className={`chat-msg-bubble ${m.type==='file'?'file':''}`}>
                 {m.type === 'file' ? (
                   <div className="chat-file">
-                    <div className="chat-file-icon" aria-hidden="true">📎</div>
+                    <div className="chat-file-icon" aria-hidden="true"><FileText size={18} /></div>
                     <div className="chat-file-meta">
                       <strong className="chat-file-name">{m.filename}</strong>
                       <span className="chat-file-size">{(m.size/1024).toFixed(1)} KB</span>
@@ -125,7 +181,34 @@ function ChatView({ contact, messages, onSendMessage }) {
         </div>
       </div>
       <div className="chat-input-container-new">
-        <div className="chat-input-wrapper-new">
+        <div className="chat-input-wrapper-new chat-input-wrapper-has-plus">
+            <Tooltip.Provider delayDuration={300} skipDelayDuration={100}>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    type="button"
+                    className={`chat-plus-inline ${showActions ? 'active' : ''}`}
+                    aria-label="Abrir menú de acciones"
+                    aria-haspopup="true"
+                    aria-expanded={showActions}
+                    onClick={()=> {
+                      // Si está abierto el panel de emojis lo cerramos y togglamos acciones
+                      setShowEmojis(false);
+                      setShowActions(v=>!v);
+                    }}
+                  >
+                    +
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content className="tooltip-content" side="top" sideOffset={10}>
+                    <div className="tooltip-header"><strong>Añadir archivos y más</strong></div>
+                    <div className="tooltip-description">Adjunta archivos o inserta emojis</div>
+                    <Tooltip.Arrow className="tooltip-arrow" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </Tooltip.Provider>
           <textarea
             ref={textareaRef}
             value={text}
@@ -145,12 +228,37 @@ function ChatView({ contact, messages, onSendMessage }) {
             onClick={handleSubmit}
             disabled={!text.trim()}
             className="chat-send-btn-new"
+            aria-label="Enviar mensaje"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 2L11 13"/>
-              <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
-            </svg>
+            <Send size={22} strokeWidth={2} />
           </button>
+            <input ref={fileInputRef} type="file" style={{display:'none'}} onChange={handleSelectFile} />
+            {showActions && (
+              <div className="chat-actions-popover" ref={actionsRef}>
+                <div className="status-menu actions-menu" role="menu" aria-label="Acciones de inserción">
+                  <div className="status-menu-label">ACCIONES</div>
+                  <div className="status-menu-item" tabIndex={0} onClick={()=>{ setShowActions(false); setShowEmojis(true); }} role="menuitem">
+                    <span className="chat-action-ico" aria-hidden="true"><Smile size={18} /></span>
+                    <div className="status-texts">
+                      <strong>Emoji</strong>
+                      <small>Insertar símbolo</small>
+                    </div>
+                  </div>
+                  <div className="status-menu-item" tabIndex={0} onClick={triggerFileDialog} role="menuitem">
+                    <span className="chat-action-ico" aria-hidden="true"><Paperclip size={18} /></span>
+                    <div className="status-texts">
+                      <strong>Archivo</strong>
+                      <small>Adjuntar documento</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {showEmojis && !showActions && (
+              <div className="emoji-popover" ref={pickerRef}>
+                <EmojiPicker onSelect={(em)=>{ insertEmoji(em); }} />
+              </div>
+            )}
         </div>
       </div>
     </div>

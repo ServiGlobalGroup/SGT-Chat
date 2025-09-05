@@ -281,6 +281,29 @@
   opacity: 0;
 }
 
+/* Animaciones campana notificaciones */
+@keyframes bellRing {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(20deg); }
+  20% { transform: rotate(-18deg); }
+  30% { transform: rotate(15deg); }
+  40% { transform: rotate(-12deg); }
+  50% { transform: rotate(9deg); }
+  60% { transform: rotate(-6deg); }
+  70% { transform: rotate(4deg); }
+  80% { transform: rotate(-2deg); }
+  90% { transform: rotate(1deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes bellOffPulse {
+  0% { transform: scale(1); opacity:1; }
+  40% { transform: scale(.85); opacity:.6; }
+  70% { transform: scale(1.05); opacity:.9; }
+  100% { transform: scale(1); opacity:1; }
+}
+.bell-on { animation: bellRing .7s ease-in-out; transform-origin: 50% 10%; }
+.bell-off { animation: bellOffPulse .55s ease-in-out; transform-origin: center; }
+
 .sidebar-nav-icon-container {
   position: relative;
   display: flex;
@@ -395,26 +418,31 @@
 }
 
 .contact-list-content {
-  padding: 8px 0;
+  padding: 10px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* espacio vertical uniforme */
 }
 
 .contact-item {
   display: flex;
   align-items: center;
-  padding: 16px 20px;
+  padding: 14px 18px;
   cursor: pointer;
   transition: all 0.3s ease;
   border-left: 4px solid transparent;
-  margin: 2px 8px;
-  border-radius: 12px;
+  margin: 0 10px; /* vertical se maneja con gap */
+  border-radius: 14px;
   position: relative;
+  background: var(--color-bg-primary); /* tarjeta sutil */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
 }
 
 /* Variante compacta global (aplicada a .contact-list .contact-item cuando .contact-list tiene clase compact) */
 .contact-list.compact .contact-item {
   padding: 10px 14px;
-  margin: 2px 6px;
-  border-radius: 10px;
+  margin: 0 8px; /* usa gap vertical */
+  border-radius: 12px;
 }
 
 .contact-list.compact .avatar-round,
@@ -467,13 +495,13 @@
 
 .contact-item:hover {
   transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 16px -4px rgba(0,0,0,0.12);
 }
 
 .contact-item.selected {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
   border-left-color: var(--color-primary);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 6px 18px -2px rgba(99, 102, 241, 0.35);
   transform: translateX(4px);
 }
 

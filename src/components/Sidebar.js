@@ -15,6 +15,7 @@ import {
 
 function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [bellAnimating, setBellAnimating] = useState(false);
   const [userStatus, setUserStatus] = useState('online'); // 'online' | 'busy' | 'away'
   const navRef = useRef(null);
   const [indicatorStyle, setIndicatorStyle] = useState({ opacity: 0 });
@@ -47,7 +48,12 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
       icon: Bell, 
       label: 'Notificaciones', 
       description: notificationsEnabled ? 'Desactivar notificaciones' : 'Activar notificaciones',
-      action: () => setNotificationsEnabled(!notificationsEnabled),
+      action: () => {
+        setNotificationsEnabled(prev => !prev);
+        setBellAnimating(true);
+        // quitar clase animación tras terminar ciclo
+        setTimeout(()=> setBellAnimating(false), 700);
+      },
       active: notificationsEnabled
     },
     { 
@@ -59,7 +65,7 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
   ];
 
   const renderNavItem = (item, isActive = false, onClick = null) => {
-    const IconComponent = item.icon;
+  const IconComponent = item.icon;
     return (
       <Tooltip.Root key={item.id}>
         <Tooltip.Trigger asChild>
@@ -68,7 +74,7 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
             onClick={onClick || (() => onSectionChange && onSectionChange(item.id))}
           >
             <div className="sidebar-nav-icon-container">
-              <IconComponent size={20} strokeWidth={2} />
+        <IconComponent size={20} strokeWidth={2} className={item.id === 'notifications' && bellAnimating ? (notificationsEnabled ? 'bell-on' : 'bell-off') : ''} />
               {item.badge && (
                 <span className="sidebar-nav-badge">{item.badge}</span>
               )}

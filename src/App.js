@@ -105,18 +105,24 @@ function App() {
     setMessagesByContact(prev => prev[id] ? prev : { ...prev, [id]: sampleMessages(id) });
   };
 
-  const handleSendMessage = (contactId, text) => {
+  const handleSendMessage = (contactId, payload) => {
+    const isFile = typeof payload === 'object' && payload && payload.type === 'file';
+    const message = isFile
+      ? { id: Date.now(), ...payload, own: true, timestamp: Date.now() }
+      : { id: Date.now(), text: String(payload), own: true, timestamp: Date.now() };
+
     setMessagesByContact(prev => ({
       ...prev,
       [contactId]: [
         ...(prev[contactId] || []),
-        { id: Date.now(), text, own: true, timestamp: Date.now() }
+        message
       ]
     }));
+
     // Actualizar preview en la lista (último mensaje y hora)
     setContacts(prev => prev.map(c => c.id === contactId ? {
       ...c,
-      lastMessage: text,
+      lastMessage: isFile ? `📎 ${message.filename}` : message.text,
       timestamp: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),
       lastActivity: Date.now()
     } : c));
