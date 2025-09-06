@@ -2,23 +2,10 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import * as Dialog from '@radix-ui/react-dialog';
 import EmojiPicker from './EmojiPicker';
+import { generateAvatarColor, getInitials } from '../utils/avatarUtils';
+import { formatTime } from '../utils/formatUtils';
 import '../styles/chat.css';
 import { Smile, Paperclip, FileText, ArrowUp, Copy, CalendarPlus, Download, X } from 'lucide-react';
-
-// Genera un color determinista basado en el nombre
-const generateAvatarColor = (name) => {
-  const colors = [
-    '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4',
-    '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#10b981'
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-};
-
-const getInitials = (name) => name.split(' ').map(w => w[0]?.toUpperCase()).slice(0,2).join('');
 
 function ChatView({ contact, messages, onSendMessage, onAddReminder }) {
   const [text, setText] = useState('');
@@ -311,7 +298,7 @@ function ChatView({ contact, messages, onSendMessage, onAddReminder }) {
                   ) : (
                     <p>{m.text}</p>
                   )}
-                  <span className="chat-msg-time" aria-label="Hora del mensaje">{new Date(m.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span>
+                  <span className="chat-msg-time" aria-label="Hora del mensaje">{formatTime(m.timestamp)}</span>
                 </div>
               </div>
             );

@@ -1,41 +1,40 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import { Search, Pin, Trash2, X } from 'lucide-react';
+import { generateAvatarColor, getInitials } from '../utils/avatarUtils';
+import { debounce } from '../utils/formatUtils';
 import '../styles/avatars.css';
 
 function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin, onDeleteContact }) {
   const searchInputRef = useRef(null);
-  // Función para generar color único basado en el nombre
-  const generateAvatarColor = (name) => {
-    const colors = [
-      '#ef4444', // Rojo
-      '#f97316', // Naranja
-      '#eab308', // Amarillo
-      '#22c55e', // Verde
-      '#06b6d4', // Cyan
-      '#3b82f6', // Azul
-      '#6366f1', // Indigo
-      '#8b5cf6', // Violeta
-      '#ec4899', // Rosa
-      '#10b981', // Esmeralda
-    ];
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filtrar contactos basado en búsqueda - memoizado
+  const filteredContacts = useMemo(() => {
+    if (!searchTerm.trim()) return contacts;
     
-    // Usar el código hash del nombre para seleccionar un color
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const index = Math.abs(hash) % colors.length;
-    return colors[index];
+    const term = searchTerm.toLowerCase();
+    return contacts.filter(contact => 
+      contact.name.toLowerCase().includes(term) ||
+      contact.lastMessage.toLowerCase().includes(term)
+    );
+  }, [contacts, searchTerm]);
+
+  // Función debounced para búsqueda
+  const debouncedSearch = useMemo(
+    () => debounce((value) => setSearchTerm(value), 300),
+    []
+  );
+
+  const handleSearchChange = (e) => {
+    debouncedSearch(e.target.value);
   };
 
-  // Función para extraer iniciales del nombre
-  const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('');
+  const clearSearch = () => {
+    setSearchTerm('');
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
   };
 
   return (
@@ -50,29 +49,32 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
             placeholder="Buscar conversaciones..."
             className="search-input"
             aria-label="Buscar conversaciones"
+            onChange={handleSearchChange}
           />
-          <button
-            type="button"
-            className="search-clear"
-            aria-label="Limpiar búsqueda"
-            title="Limpiar"
-            onClick={() => {
-              const el = searchInputRef.current;
-              if (!el) return;
-              el.value = '';
-              el.focus();
-              el.dispatchEvent(new Event('input', { bubbles: true }));
-            }}
-          >
-            <X size={16} />
-          </button>
+          {searchTerm && (
+            <button
+              type="button"
+              className="search-clear"
+              aria-label="Limpiar búsqueda"
+              title="Limpiar"
+              onClick={clearSearch}
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 
       <ScrollArea.Root className="contact-list-scroll">
         <ScrollArea.Viewport className="contact-list-viewport">
           <div className="contact-list-content">
-            {contacts.map((contact) => {
+            {filteredContacts.length === 0 && searchTerm ? (
+              <div className="no-results">
+                <p>No se encontraron conversaciones</p>
+                <small>Intenta con otro término de búsqueda</small>
+              </div>
+            ) : (
+              filteredContacts.map((contact) => {
               const avatarColor = generateAvatarColor(contact.name);
               const initials = getInitials(contact.name);
               
@@ -136,7 +138,8 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
                 </div>
               </div>
               );
-            })}
+            })
+            )}
           </div>
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar className="scrollbar" orientation="vertical">

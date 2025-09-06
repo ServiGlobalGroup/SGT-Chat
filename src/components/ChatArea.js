@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import * as Separator from '@radix-ui/react-separator';
+import { generateAvatarColor, getInitials } from '../utils/avatarUtils';
+import { formatTime } from '../utils/formatUtils';
 import { 
   Send, 
   Smile, 
@@ -14,38 +16,6 @@ function ChatArea({ selectedContact, messages, onSendMessage }) {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const MAX_TEXTAREA_HEIGHT = 180; // px — límite antes de activar scroll interno
-
-  // Función para generar color único basado en el nombre
-  const generateAvatarColor = (name) => {
-    const colors = [
-      '#ef4444', // Rojo
-      '#f97316', // Naranja
-      '#eab308', // Amarillo
-      '#22c55e', // Verde
-      '#06b6d4', // Cyan
-      '#3b82f6', // Azul
-      '#6366f1', // Indigo
-      '#8b5cf6', // Violeta
-      '#ec4899', // Rosa
-      '#10b981', // Esmeralda
-    ];
-    
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const index = Math.abs(hash) % colors.length;
-    return colors[index];
-  };
-
-  // Función para extraer iniciales del nombre
-  const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('');
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -79,13 +49,6 @@ function ChatArea({ selectedContact, messages, onSendMessage }) {
       e.preventDefault();
       handleSubmit(e);
     }
-  };
-
-  const formatTime = (timestamp) => {
-    return new Intl.DateTimeFormat('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(new Date(timestamp));
   };
 
   if (!selectedContact) {

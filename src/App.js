@@ -1,70 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import ContactList from './components/ContactList';
 import ChatView from './components/ChatView';
 import CalendarPage from './components/CalendarPage';
 import FilesPage from './components/FilesPage';
+import { generateSampleMessages } from './utils/formatUtils';
+import { INITIAL_CONTACTS, USER_STATUSES, INTERVALS } from './constants/appConstants';
 import './styles/App.css';
 
 function App() {
   const [activeSection, setActiveSection] = useState('chats');
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: 'Juan Pérez',
-      avatar: 'JP',
-      status: 'online',
-      lastMessage: 'Hola, ¿cómo estás?',
-      timestamp: '10:30',
-  unreadCount: 2,
-  pinned: true,
-  lastActivity: Date.now() - 1000 * 60 * 5 // hace 5 min
-    },
-    {
-      id: 2,
-      name: 'María García',
-      avatar: 'MG',
-      status: 'away',
-      lastMessage: 'Perfecto, nos vemos mañana',
-      timestamp: '09:15',
-  unreadCount: 0,
-  pinned: false,
-  lastActivity: Date.now() - 1000 * 60 * 60 // hace 1 hora
-    },
-    {
-      id: 3,
-      name: 'Carlos López',
-      avatar: 'CL',
-      status: 'offline',
-      lastMessage: 'Gracias por la información',
-      timestamp: 'Ayer',
-  unreadCount: 1,
-  pinned: false,
-  lastActivity: Date.now() - 1000 * 60 * 60 * 24 // ayer
-    },
-    {
-      id: 4,
-      name: 'Ana Martínez',
-      avatar: 'AM',
-      status: 'busy',
-      lastMessage: 'Estoy en reunión, te escribo luego',
-      timestamp: '08:45',
-  unreadCount: 0,
-  pinned: false,
-  lastActivity: Date.now() - 1000 * 60 * 90 // hace 90 min
-    },
-    {
-      id: 5,
-      name: 'Luis Rodríguez',
-      avatar: 'LR',
-      status: 'online',
-      lastMessage: '¿Podemos revisar el proyecto?',
-      timestamp: '07:30',
-  unreadCount: 3,
-  pinned: false,
-  lastActivity: Date.now() - 1000 * 60 * 150 // hace 150 min
-    }
-  ]);
+  const [contacts, setContacts] = useState(INITIAL_CONTACTS);
 
   const [selectedContactId, setSelectedContactId] = useState(null);
 
@@ -101,7 +47,7 @@ function App() {
           }
           return c;
         }));
-      }, 450); // velocidad de decremento
+      }, INTERVALS.READING_PROGRESS); // velocidad de decremento usando constante
     }
     // Inicializar array si no existe
     setMessagesByContact(prev => prev[id] ? prev : { ...prev, [id]: sampleMessages(id) });
@@ -162,58 +108,80 @@ function App() {
     console.log('Recordatorio añadido:', { contactId, messageId, text, date });
   };
 
-  // Mensajes de ejemplo iniciales
-  const sampleMessages = (id) => [
-    { id: `${id}-1`, text: 'Hola 👋', own: false, timestamp: Date.now() - 600000 },
-    { id: `${id}-2`, text: 'Adjunto el documento.', own: false, timestamp: Date.now() - 580000 },
-    { id: `${id}-f1`, type: 'file', filename: 'informe-proyecto.pdf', size: 234567, mime: 'application/pdf', own: false, timestamp: Date.now() - 575000 },
-    { id: `${id}-3`, text: 'Perfecto, recibido ✅', own: true, timestamp: Date.now() - 550000 },
-    { id: `${id}-f2`, type: 'file', filename: 'captura.png', size: 84567, mime: 'image/png', own: true, timestamp: Date.now() - 530000 }
-  ];
+  // Mensajes de ejemplo iniciales usando utilidad compartida
+  const sampleMessages = useCallback(generateSampleMessages, []);
 
-  const selectedContact = contacts.find(c => c.id === selectedContactId) || null;
-  const currentMessages = selectedContact ? (messagesByContact[selectedContact.id] || sampleMessages(selectedContact.id)) : [];
+  // Memoizar contacto seleccionado y mensajes actuales para evitar recálculos
+  const selectedContact = useMemo(() => 
+    contacts.find(c => c.id === selectedContactId) || null, 
+    [contacts, selectedContactId]
+  );
 
-  // Lista agregada de archivos (enviados y recibidos)
-  const allFileMessages = contacts.flatMap(c => {
-    const msgs = messagesByContact[c.id] || sampleMessages(c.id);
-    return msgs.filter(m => m.type === 'file').map(m => ({
-      contactId: c.id,
-      contactName: c.name,
-      direction: m.own ? 'Enviado' : 'Recibido',
-      timestamp: m.timestamp,
-      filename: m.filename,
-      size: m.size,
-      mime: m.mime,
-      id: m.id
-    }));
-  }).sort((a,b)=> b.timestamp - a.timestamp);
+  const currentMessages = useMemo(() => 
+    selectedContact ? (messagesByContact[selectedContact.id] || sampleMessages(selectedContact.id)) : [],
+    [selectedContact, messagesByContact, sampleMessages]
+  );
 
-  // Simular actualizaciones de estado en tiempo real
+  // Lista agregada de archivos (enviados y recibidos) - memoizada
+  const allFileMessages = useMemo(() => {
+    return contacts.flatMap(c => {
+      const msgs = messagesByContact[c.id] || sampleMessages(c.id);
+      return msgs.filter(m => m.type === 'file').map(m => ({
+        contactId: c.id,
+        contactName: c.name,
+        direction: m.own ? 'Enviado' : 'Recibido',
+        timestamp: m.timestamp,
+        filename: m.filename,
+        size: m.size,
+        mime: m.mime,
+        id: m.id
+      }));
+    }).sort((a,b)=> b.timestamp - a.timestamp);
+  }, [contacts, messagesByContact, sampleMessages]);
+
+  // Simular actualizaciones de estado en tiempo real - con cleanup mejorado
   useEffect(() => {
     const interval = setInterval(() => {
       setContacts(prevContacts => 
         prevContacts.map(contact => ({
           ...contact,
           status: Math.random() > 0.8 ? 
-            ['online', 'away', 'busy', 'offline'][Math.floor(Math.random() * 4)] : 
+            USER_STATUSES[Math.floor(Math.random() * USER_STATUSES.length)] : 
             contact.status
         }))
       );
-    }, 30000); // Cambiar estados cada 30 segundos
+    }, INTERVALS.STATUS_UPDATE); // Cambiar estados usando constante
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
-  const totalUnread = contacts.reduce((acc,c) => acc + (c.unreadCount || 0), 0);
+  // Cleanup para el intervalo de lectura cuando el componente se desmonta
+  useEffect(() => {
+    return () => {
+      if (readingIntervalRef.current) {
+        clearInterval(readingIntervalRef.current);
+        readingIntervalRef.current = null;
+      }
+    };
+  }, []);
 
-  // Orden derivada: primero pinned por última actividad desc, luego no pinned por última actividad desc
-  const orderedContacts = [...contacts].sort((a,b) => {
-    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-    const aTime = a.lastActivity || 0;
-    const bTime = b.lastActivity || 0;
-    return bTime - aTime; // más reciente primero
-  });
+  // Memoizar total de mensajes no leídos
+  const totalUnread = useMemo(() => 
+    contacts.reduce((acc, c) => acc + (c.unreadCount || 0), 0),
+    [contacts]
+  );
+
+  // Orden derivada: primero pinned por última actividad desc, luego no pinned por última actividad desc - memoizada
+  const orderedContacts = useMemo(() => {
+    return [...contacts].sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      const aTime = a.lastActivity || 0;
+      const bTime = b.lastActivity || 0;
+      return bTime - aTime; // más reciente primero
+    });
+  }, [contacts]);
 
   return (
     <div className="app">

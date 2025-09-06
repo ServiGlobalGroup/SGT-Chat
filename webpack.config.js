@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
 
@@ -39,6 +40,9 @@ module.exports = {
       template: './public/index.html',
       title: 'SGT Chat',
     }),
+    new webpack.ProvidePlugin({
+      global: 'global/window',
+    }),
   ],
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -56,5 +60,5 @@ module.exports = {
       writeToDisk: false,
     },
   },
-  target: 'electron-renderer',
+  target: 'web',
 };
