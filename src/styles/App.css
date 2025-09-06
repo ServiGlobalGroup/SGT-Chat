@@ -917,13 +917,61 @@
 /* Alert dialog eliminación */
 .alert-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(4px); animation:fadeIn .25s ease; z-index:900; }
 .alert-content { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:100%; max-width:420px; background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:18px; box-shadow:0 10px 38px -8px rgba(0,0,0,.6); display:flex; flex-direction:column; overflow:hidden; animation:scaleIn .25s cubic-bezier(.4,0,.2,1); z-index:901; }
+.alert-content.delete-chat-alert { max-width:400px; }
 .alert-header { padding:18px 20px 12px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center; }
 .alert-title { margin:0; font-size:16px; font-weight:600; }
 .alert-close { background:var(--color-bg-tertiary); border:1px solid var(--color-border); width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.25s; }
 .alert-close:hover { background:var(--color-bg-primary); }
 .alert-body { padding:18px 20px 8px; display:flex; flex-direction:column; gap:10px; }
 .alert-text { margin:0; font-size:14px; }
+.delete-chat-alert .alert-text { font-weight:500; }
 .alert-quote { margin:0; font-size:12px; font-style:italic; color:var(--color-text-secondary); background:var(--color-bg-tertiary); padding:10px 12px; border-radius:10px; border:1px solid var(--color-border); }
+.delete-chat-alert .alert-quote { background:linear-gradient(135deg, rgba(220,38,38,.08), rgba(239,68,68,.08)); border-color: rgba(239,68,68,.35); }
+
+/* Animación botón eliminar (solo en modal eliminar chat) */
+.delete-chat-alert .btn-danger {
+  position: relative;
+  overflow: hidden;
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
+}
+.delete-chat-alert .btn-danger:hover {
+  animation: dangerPulse 1.2s ease-in-out infinite;
+}
+.delete-chat-alert .btn-danger:active {
+  transform: scale(0.98);
+}
+.delete-chat-alert .btn-danger::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.delete-chat-alert .btn-danger:active::after {
+  animation: ripple .5s ease-out;
+}
+
+@keyframes dangerPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239,68,68,.45); }
+  70% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+@keyframes ripple {
+  from { width: 0; height: 0; opacity: .75; }
+  to   { width: 240%; height: 240%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .delete-chat-alert .btn-danger { transition: none; animation: none; }
+  .delete-chat-alert .btn-danger:hover { animation: none; }
+  .delete-chat-alert .btn-danger:active { transform: none; }
+}
 .alert-footer { padding:14px 20px 18px; display:flex; justify-content:flex-end; gap:10px; }
 
 /* === Archivos === */

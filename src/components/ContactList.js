@@ -1,10 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { Search, Pin, Trash2, X } from 'lucide-react';
 import '../styles/avatars.css';
 
 function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin, onDeleteContact }) {
   const searchInputRef = useRef(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [pendingDeleteName, setPendingDeleteName] = useState(null);
   // Función para generar color único basado en el nombre
   const generateAvatarColor = (name) => {
     const colors = [
@@ -123,8 +126,8 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
                           title="Eliminar chat"
                           onClick={() => {
                             if (!onDeleteContact) return;
-                            const ok = window.confirm('¿Eliminar este chat? Esta acción no se puede deshacer.');
-                            if (ok) onDeleteContact(contact.id);
+                            setPendingDeleteId(contact.id);
+                            setPendingDeleteName(contact.name);
                           }}
                         >
                           <Trash2 size={14} />
@@ -143,6 +146,51 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
           <ScrollArea.Thumb className="scrollbar-thumb" />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
+    {/* Modal de confirmación para eliminar chat */}
+    <AlertDialog.Root
+      open={!!pendingDeleteId}
+      onOpenChange={(v) => {
+        if (!v) {
+          setPendingDeleteId(null);
+          setPendingDeleteName(null);
+        }
+      }}
+    >
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="alert-overlay" />
+        <AlertDialog.Content className="alert-content delete-chat-alert" aria-label="Confirmar eliminación de chat">
+          <div className="alert-header">
+            <AlertDialog.Title className="alert-title">Eliminar chat</AlertDialog.Title>
+            <AlertDialog.Cancel asChild>
+              <button className="alert-close" aria-label="Cerrar">×</button>
+            </AlertDialog.Cancel>
+          </div>
+          <div className="alert-body">
+            <p className="alert-text">¿Seguro que deseas eliminar este chat?</p>
+            {pendingDeleteName && <p className="alert-quote">“{pendingDeleteName}”</p>}
+          </div>
+          <div className="alert-footer">
+            <AlertDialog.Cancel asChild>
+              <button className="btn-secondary btn-sm">Cancelar</button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action asChild>
+              <button
+                className="btn-danger btn-sm"
+                onClick={() => {
+                  if (onDeleteContact && pendingDeleteId) {
+                    onDeleteContact(pendingDeleteId);
+                  }
+                  setPendingDeleteId(null);
+                  setPendingDeleteName(null);
+                }}
+              >
+                Eliminar
+              </button>
+            </AlertDialog.Action>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
     </div>
   );
 }
