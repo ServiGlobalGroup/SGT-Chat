@@ -4,9 +4,14 @@ import ContactList from './components/ContactList';
 import ChatView from './components/ChatView';
 import CalendarPage from './components/CalendarPage';
 import FilesPage from './components/FilesPage';
+import LoginPage from './components/LoginPage';
 import './styles/App.css';
 
 function App() {
+  // Autenticación demo: no persistimos sesión; siempre se pide contraseña.
+  const [auth, setAuth] = useState(null);
+  const handleLogin = (data) => setAuth(data);
+  const handleLogout = () => setAuth(null);
   const [activeSection, setActiveSection] = useState('chats');
   const [contacts, setContacts] = useState([
     {
@@ -215,12 +220,21 @@ function App() {
     return bTime - aTime; // más reciente primero
   });
 
+  if (!auth) {
+    return (
+      <div className="app">
+        <LoginPage onLogin={handleLogin} />
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <Sidebar 
         activeSection={activeSection}
         onSectionChange={setActiveSection}
         totalUnread={totalUnread}
+        onLogout={handleLogout}
       />
       {activeSection === 'chats' && (
         <>

@@ -13,7 +13,7 @@ import {
   LogOut
 } from 'lucide-react';
 
-function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
+function Sidebar({ activeSection, onSectionChange, totalUnread = 0, onLogout }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [bellAnimating, setBellAnimating] = useState(false);
   const [userStatus, setUserStatus] = useState('online'); // 'online' | 'busy' | 'away'
@@ -56,11 +56,12 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
       },
       active: notificationsEnabled
     },
-    { 
+    onLogout && {
       id: 'logout', 
       icon: LogOut, 
       label: 'Cerrar Sesión', 
-      description: 'Salir de la aplicación'
+      description: 'Salir de la aplicación',
+      action: () => onLogout && onLogout()
     }
   ];
 
@@ -170,7 +171,7 @@ function Sidebar({ activeSection, onSectionChange, totalUnread = 0 }) {
 
         {/* Footer con configuración */}
         <div className="sidebar-footer">
-          {settingsItems.map((item) => 
+          {settingsItems.filter(Boolean).map((item) => 
             renderNavItem(item, item.active, item.action)
           )}
         </div>
