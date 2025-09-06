@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
-import { Search, Pin, Trash2 } from 'lucide-react';
+import { Search, Pin, Trash2, X } from 'lucide-react';
 import '../styles/avatars.css';
 
 function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin, onDeleteContact }) {
+  const searchInputRef = useRef(null);
   // Función para generar color único basado en el nombre
   const generateAvatarColor = (name) => {
     const colors = [
@@ -42,12 +43,29 @@ function ContactList({ contacts, selectedContactId, onSelectContact, onTogglePin
       <div className="contact-list-header">
         <h2>Chats</h2>
         <div className="search-container">
-          <Search className="search-icon" size={16} />
-          <input 
-            type="text" 
-            placeholder="Buscar conversaciones..." 
+          <Search className="search-icon" size={16} aria-hidden="true" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Buscar conversaciones..."
             className="search-input"
+            aria-label="Buscar conversaciones"
           />
+          <button
+            type="button"
+            className="search-clear"
+            aria-label="Limpiar búsqueda"
+            title="Limpiar"
+            onClick={() => {
+              const el = searchInputRef.current;
+              if (!el) return;
+              el.value = '';
+              el.focus();
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+            }}
+          >
+            <X size={16} />
+          </button>
         </div>
       </div>
 
